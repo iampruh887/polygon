@@ -118,8 +118,6 @@ export default function Home({ state, navigate }: Props) {
           );
         })}
       </div>
-      <p className="home-hint">pick a vertex — or the ☰ if hexagons aren't your thing yet</p>
-
       {showYears && (
         <div className="hm-overlay" onClick={() => setShowYears(false)}>
           <div className="hm-panel" onClick={(e) => e.stopPropagation()}>

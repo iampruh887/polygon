@@ -33,8 +33,16 @@ function PolygonApp({ clerkEnabled }: Props) {
   const [scanError, setScanError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [transferNote, setTransferNote] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>(
+    () => (localStorage.getItem('polygon-theme') === 'dark' ? 'dark' : 'light'),
+  );
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('polygon-theme', theme);
+  }, [theme]);
 
   const refresh = useCallback(async () => {
     try {
@@ -129,17 +137,23 @@ function PolygonApp({ clerkEnabled }: Props) {
     <div className="app" onDoubleClick={onDoubleClick}>
       {view !== 'home' && (
         <header className="masthead slim">
-          <button className="wordmark-btn" onClick={goHome} title="Home (or double-click anywhere)">
+          <button className="wordmark-btn" onClick={goHome} title="Home — or double-click any empty space">
             <span className="mark">⬡</span>
             <span className="wordmark-text">POLYGON</span>
           </button>
           <span className="page-title">{PAGE_TITLES[view]}</span>
-          <span className="dblclick-hint">double-click empty space to fold home</span>
         </header>
       )}
 
       <div className="top-actions">
         {clerkEnabled && <UserButton />}
+        <button
+          className="hamburger"
+          title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+        >
+          {theme === 'dark' ? '☀' : '☾'}
+        </button>
         <button className="hamburger" title="Menu" onClick={() => setMenuOpen((o) => !o)}>
           ☰
         </button>

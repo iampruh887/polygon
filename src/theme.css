@@ -3,6 +3,8 @@
 :root {
   --paper: #f7f3ec;
   --paper-raised: #fffdf8;
+  --paper-sunken: #f2ece2;
+  --code-bg: #efe8db;
   --ink: #211c18;
   --ink-soft: #5c534b;
   --ink-faint: #948a80;
@@ -11,9 +13,37 @@
   --red: #a4161a;
   --red-deep: #6e0e12;
   --red-wash: #f6e3de;
+  --hm0: #ece4d4;
+  --hm1: #e8b8ae;
+  --hm2: #cd6f6c;
+  --hm3: #a4161a;
+  --hm4: #6e0e12;
+  --rf-dot: #c9bda9;
   --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
   --sans: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --mono: 'SFMono-Regular', 'Cascadia Mono', Consolas, 'Liberation Mono', monospace;
+}
+
+/* Dark mode: deep red, bloodred. Same bones, different blood. */
+[data-theme='dark'] {
+  --paper: #150a0b;
+  --paper-raised: #200f11;
+  --paper-sunken: #1a0c0e;
+  --code-bg: #2a1315;
+  --ink: #f0e2dc;
+  --ink-soft: #c8a9a1;
+  --ink-faint: #8f6d68;
+  --line: #35191b;
+  --line-strong: #4f2225;
+  --red: #b52a31;
+  --red-deep: #d94a44;
+  --red-wash: #3a1416;
+  --hm0: #2b1517;
+  --hm1: #57201f;
+  --hm2: #8c2e2a;
+  --hm3: #c23a31;
+  --hm4: #f05545;
+  --rf-dot: #472225;
 }
 
 * {
@@ -85,13 +115,6 @@ body {
   color: var(--ink-soft);
 }
 
-.masthead .dblclick-hint {
-  margin-left: auto;
-  margin-right: 48px;
-  font-size: 11px;
-  color: var(--ink-faint);
-  font-style: italic;
-}
 
 /* ── Hamburger + menu ───────────────────────────────── */
 
@@ -472,13 +495,6 @@ body {
   color: var(--ink-faint);
 }
 
-.home-hint {
-  color: var(--ink-faint);
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 13.5px;
-  margin: 0;
-}
 
 /* ── Heatmaps ───────────────────────────────────────── */
 
@@ -490,6 +506,7 @@ body {
   appearance: none;
   border: none;
   background: none;
+  color: var(--ink);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -531,23 +548,23 @@ body {
 }
 
 .hm-l0 {
-  background: #ece4d4;
+  background: var(--hm0);
 }
 
 .hm-l1 {
-  background: #e8b8ae;
+  background: var(--hm1);
 }
 
 .hm-l2 {
-  background: #cd6f6c;
+  background: var(--hm2);
 }
 
 .hm-l3 {
-  background: #a4161a;
+  background: var(--hm3);
 }
 
 .hm-l4 {
-  background: #6e0e12;
+  background: var(--hm4);
 }
 
 .hm-cell.today {
@@ -555,12 +572,6 @@ body {
   outline-offset: -1px;
 }
 
-.hm-hint {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 11.5px;
-  color: var(--ink-faint);
-}
 
 .hm-overlay {
   position: fixed;
@@ -744,7 +755,7 @@ body {
 .ledger-side {
   padding: 28px 24px;
   overflow-y: auto;
-  background: #f2ece2;
+  background: var(--paper-sunken);
 }
 
 section + section {
@@ -928,7 +939,7 @@ h2 .count {
 .artifact-item .content.code {
   font-family: var(--mono);
   font-size: 12px;
-  background: #efe8db;
+  background: var(--code-bg);
   padding: 6px 8px;
 }
 
@@ -1028,7 +1039,7 @@ h2 .count {
 
 .editor-rail {
   border-right: 1px solid var(--line-strong);
-  background: #f2ece2;
+  background: var(--paper-sunken);
   padding: 16px 14px;
   overflow-y: auto;
 }
@@ -1149,7 +1160,7 @@ h2 .count {
   font-family: var(--mono);
   font-size: 13.5px;
   line-height: 1.6;
-  background: #efe8db;
+  background: var(--code-bg);
   padding: 12px;
 }
 
@@ -1282,6 +1293,7 @@ h2 .count {
   border: none;
   background: none;
   font: inherit;
+  color: var(--ink);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1349,7 +1361,7 @@ h2 .count {
 
 .feed-rail {
   border-left: 1px solid var(--line-strong);
-  background: #f2ece2;
+  background: var(--paper-sunken);
   padding: 18px 16px;
   overflow-y: auto;
 }
@@ -1523,4 +1535,56 @@ h2 .count {
 
 .react-flow__attribution {
   background: transparent;
+}
+
+/* ── Theme transition + dark-mode React Flow fixes ──── */
+
+body,
+.masthead,
+.hamburger,
+.menu-sheet,
+.pursuit-card,
+.member-card,
+.connection-card,
+.atlas-node,
+.feed-rail,
+.editor-rail,
+.ledger-side {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+/* React Flow paints some colors via props/inline styles; retint for dark. */
+.react-flow__background circle {
+  fill: var(--rf-dot);
+}
+
+[data-theme='dark'] .react-flow__controls {
+  box-shadow: none;
+  border: 1px solid var(--line-strong);
+}
+
+[data-theme='dark'] .react-flow__controls button {
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--line);
+}
+
+[data-theme='dark'] .react-flow__controls button:hover {
+  background: var(--red-wash);
+}
+
+[data-theme='dark'] .react-flow__controls button svg {
+  fill: var(--ink);
+}
+
+[data-theme='dark'] .react-flow__edge-textbg {
+  fill: var(--paper) !important;
+}
+
+[data-theme='dark'] .react-flow__edge-text {
+  fill: var(--red-deep) !important;
+}
+
+/* Structural (pursuit→artifact) edges are tan inline styles; dim them in dark. */
+[data-theme='dark'] .react-flow__edge-path[style*='c9bda9'] {
+  stroke: var(--line-strong) !important;
 }

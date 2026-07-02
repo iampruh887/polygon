@@ -75,7 +75,6 @@ export function MonthHeatmap({ counts, year, month, onClick }: MonthProps) {
           ),
         )}
       </div>
-      <div className="hm-hint">this month · click to unfold the years</div>
     </button>
   );
 }
