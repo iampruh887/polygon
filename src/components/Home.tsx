@@ -45,6 +45,12 @@ const VERTICES: VertexNav[] = [
     countOf: () => NaN,
     style: { left: '82%', top: '103%', transform: 'translate(0, -50%)' },
   },
+  {
+    view: 'commons',
+    label: 'Commons',
+    countOf: () => NaN,
+    style: { left: '-3.5%', top: '50%', transform: 'translate(-100%, -50%)' },
+  },
 ];
 
 export default function Home({ state, navigate }: Props) {
@@ -83,7 +89,7 @@ export default function Home({ state, navigate }: Props) {
           <circle cx="300" cy="0" r="7" className="hex-dot" />
           <circle cx="100" cy="346" r="7" className="hex-dot" />
           <circle cx="300" cy="346" r="7" className="hex-dot" />
-          <circle cx="0" cy="173" r="3.5" className="hex-dot faint" />
+          <circle cx="0" cy="173" r="7" className="hex-dot" />
           <circle cx="400" cy="173" r="3.5" className="hex-dot faint" />
         </svg>
 

@@ -19,8 +19,28 @@ npm run dev            # server on :3141, app on http://localhost:5173
 ```
 
 Everything lives on your machine. The database is a single SQLite file at
-`data/polygon.db` — copying that file is your backup. Your API key stays in
-`.env`, which is gitignored.
+`data/polygon.db` — copying that file is your backup, and the ☰ menu offers
+explicit **⬇ export .db / ⬆ import .db** round-trips (import replaces your
+data, transactionally, with id remapping). Your API key stays in `.env`,
+which is gitignored.
+
+## Accounts & the Commons (optional)
+
+Polygon runs in **solo mode** by default — no sign-in, all data owned locally.
+To turn on Google sign-in and the community layer, create a free
+[Clerk](https://dashboard.clerk.com) app, enable the Google social connection,
+and add to `.env`:
+
+```
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+```
+
+Restart and Polygon gates behind sign-in, scopes every pursuit to its owner,
+and lights up the **Commons** (west vertex of the hexagon): a member roster
+and a feed of connections discovered inside pursuits their owners chose to
+make public. Pursuits are **private by default** — flip ○/◉ on the Pursuits
+page. Moving from solo to signed-in? Export your .db first, sign in, import.
 
 ## Validate the core bet first
 

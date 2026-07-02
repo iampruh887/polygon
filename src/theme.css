@@ -95,11 +95,17 @@ body {
 
 /* ── Hamburger + menu ───────────────────────────────── */
 
-.hamburger {
+.top-actions {
   position: fixed;
   top: 8px;
   right: 12px;
   z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hamburger {
   appearance: none;
   border: 1px solid var(--ink);
   background: var(--paper-raised);
@@ -153,6 +159,177 @@ body {
 .menu-item.active {
   color: var(--red);
   font-weight: 700;
+}
+
+.menu-sheet a.menu-item {
+  text-decoration: none;
+  display: block;
+}
+
+.menu-rule {
+  border-top: 2px solid var(--ink);
+}
+
+/* ── Landing (signed out) ───────────────────────────── */
+
+.landing {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.landing-hex {
+  width: min(52vh, 440px);
+}
+
+.landing-inner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Pursuit card extras ────────────────────────────── */
+
+.card-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+}
+
+.pursuit-card:hover .card-actions {
+  opacity: 1;
+}
+
+.pursuit-card.editing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-field {
+  font: inherit;
+  font-size: 13.5px;
+  padding: 6px 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.edit-field:focus {
+  outline: none;
+  border-color: var(--red);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.visibility-toggle {
+  appearance: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 8px 0 0;
+  text-align: left;
+}
+
+.visibility-toggle.public {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.visibility-toggle:hover {
+  color: var(--red-deep);
+}
+
+/* ── Commons ────────────────────────────────────────── */
+
+.member-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.member-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--paper-raised);
+  border: 1px solid var(--line-strong);
+  padding: 13px 15px;
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--red);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.member-avatar.placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--red);
+  font-size: 19px;
+  background: var(--red-wash);
+}
+
+.member-avatar.tiny {
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+}
+
+.member-name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 15.5px;
+}
+
+.you-tag {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.member-meta {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.member-pursuits {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+
+.feed-owner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
 }
 
 /* ── Page fold animation ────────────────────────────── */

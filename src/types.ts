@@ -1,7 +1,15 @@
+export interface User {
+  id: string;
+  name: string;
+  image_url: string;
+}
+
 export interface Pursuit {
   id: number;
+  user_id: string;
   name: string;
   description: string;
+  is_public: number;
   created_at: string;
   artifact_count: number;
   last_artifact_at: string | null;
@@ -32,11 +40,30 @@ export interface Connection {
 }
 
 export interface AppState {
+  user: User;
   pursuits: Pursuit[];
   artifacts: Artifact[];
   connections: Connection[];
   unscanned_pair_count: number;
   llm_configured: boolean;
+  clerk_enabled: boolean;
+}
+
+export interface CommunityMember extends User {
+  public_pursuits: number;
+  public_artifacts: number;
+  pursuit_names: string;
+}
+
+export interface PublicConnection extends Connection {
+  owner_id: string;
+  owner_name: string;
+  owner_image: string;
+}
+
+export interface CommunityData {
+  members: CommunityMember[];
+  feed: PublicConnection[];
 }
 
 export type ScanStatus = 'idle' | 'scanning' | 'found' | 'none_found' | 'failed' | 'not_configured' | 'empty';

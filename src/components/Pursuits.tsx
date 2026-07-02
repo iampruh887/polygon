@@ -76,6 +76,27 @@ export default function Pursuits({ state, refresh }: Props) {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+
+  async function saveEdit(id: number, isPublic: boolean) {
+    try {
+      await api.updatePursuit(id, editName, editDesc, isPublic);
+      setEditingId(null);
+      setFormError(null);
+      await refresh();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not save pursuit');
+    }
+  }
+
+  async function togglePublic(id: number) {
+    const p = state.pursuits.find((x) => x.id === id);
+    if (!p) return;
+    await api.updatePursuit(id, p.name, p.description, !p.is_public);
+    await refresh();
+  }
 
   const { nodes, edges } = useMemo(
     () => buildGraph(state, expanded ? 260 : 150),
@@ -147,20 +168,63 @@ export default function Pursuits({ state, refresh }: Props) {
             {state.pursuits.map((p) => {
               const days = daysSince(p.last_artifact_at);
               const quiet = p.artifact_count > 0 && days !== null && days >= 7;
+              if (p.id === editingId) {
+                return (
+                  <div className="pursuit-card editing" key={p.id}>
+                    <input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Pursuit name"
+                      className="edit-field"
+                    />
+                    <input
+                      value={editDesc}
+                      onChange={(e) => setEditDesc(e.target.value)}
+                      placeholder="What is it, briefly?"
+                      className="edit-field"
+                    />
+                    <div className="edit-actions">
+                      <button
+                        className="btn primary"
+                        disabled={!editName.trim()}
+                        onClick={() => void saveEdit(p.id, Boolean(p.is_public))}
+                      >
+                        Save
+                      </button>
+                      <button className="btn" onClick={() => setEditingId(null)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
               return (
                 <div className="pursuit-card" key={p.id}>
-                  <button
-                    className="btn ghost delete"
-                    title="Delete pursuit and its artifacts"
-                    onClick={async () => {
-                      if (confirm(`Delete "${p.name}" and its ${p.artifact_count} artifact(s)?`)) {
-                        await api.deletePursuit(p.id);
-                        await refresh();
-                      }
-                    }}
-                  >
-                    ×
-                  </button>
+                  <div className="card-actions">
+                    <button
+                      className="btn ghost"
+                      title="Edit pursuit"
+                      onClick={() => {
+                        setEditingId(p.id);
+                        setEditName(p.name);
+                        setEditDesc(p.description);
+                      }}
+                    >
+                      ✎
+                    </button>
+                    <button
+                      className="btn ghost"
+                      title="Delete pursuit and its artifacts"
+                      onClick={async () => {
+                        if (confirm(`Delete "${p.name}" and its ${p.artifact_count} artifact(s)?`)) {
+                          await api.deletePursuit(p.id);
+                          await refresh();
+                        }
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
                   <h3>{p.name}</h3>
                   {p.description && <p className="desc">{p.description}</p>}
                   <div className="meta">
@@ -178,6 +242,17 @@ export default function Pursuits({ state, refresh }: Props) {
                               : `quiet for ${days} days — it misses you`}
                     </span>
                   </div>
+                  <button
+                    className={`visibility-toggle ${p.is_public ? 'public' : ''}`}
+                    title={
+                      p.is_public
+                        ? 'Public — visible in the Commons. Click to make private.'
+                        : 'Private — only you. Click to share in the Commons.'
+                    }
+                    onClick={() => void togglePublic(p.id)}
+                  >
+                    {p.is_public ? '◉ public' : '○ private'}
+                  </button>
                 </div>
               );
             })}

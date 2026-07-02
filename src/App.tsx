@@ -1,20 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import { api } from './api';
 import type { AppState, ScanStatus } from './types';
 import Home from './components/Home';
 import Pursuits from './components/Pursuits';
 import ArtifactEditor from './components/ArtifactEditor';
 import Connections from './components/Connections';
+import Commons from './components/Commons';
 import GraphView from './components/GraphView';
 
-export type View = 'home' | 'pursuits' | 'artifacts' | 'connections' | 'map';
+export type View = 'home' | 'pursuits' | 'artifacts' | 'connections' | 'commons' | 'map';
 
 // Double-clicks on anything interactive must never trigger the collapse-to-home
 // gesture — text selection, form fiddling and graph dragging all live here.
 const INTERACTIVE =
   'input, textarea, select, button, a, label, [contenteditable], .react-flow__node, .react-flow__edge, .react-flow__controls, .edge-detail, .menu-sheet';
 
-export default function App() {
+interface Props {
+  clerkEnabled: boolean;
+}
+
+function PolygonApp({ clerkEnabled }: Props) {
   const [state, setState] = useState<AppState | null>(null);
   const [view, setView] = useState<View>('home');
   const [collapsing, setCollapsing] = useState(false);
@@ -22,7 +28,9 @@ export default function App() {
   const [scanStatus, setScanStatus] = useState<ScanStatus>('idle');
   const [scanError, setScanError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [transferNote, setTransferNote] = useState<string | null>(null);
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const importInput = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -82,11 +90,33 @@ export default function App() {
     await refresh();
   }, [refresh]);
 
+  const onImportPicked = useCallback(
+    async (file: File | undefined) => {
+      if (!file) return;
+      const sure = confirm(
+        `Import "${file.name}"? This REPLACES all of your current pursuits, artifacts, and connections with the file's contents.`,
+      );
+      if (!sure) return;
+      try {
+        const r = await api.importDb(file);
+        setTransferNote(
+          `Imported ${r.pursuits} pursuit(s), ${r.artifacts} artifact(s), ${r.connections} connection(s).`,
+        );
+        await refresh();
+      } catch (e) {
+        setTransferNote(e instanceof Error ? e.message : 'Import failed');
+      }
+      setMenuOpen(false);
+    },
+    [refresh],
+  );
+
   const PAGE_TITLES: Record<View, string> = {
     home: '',
     pursuits: 'Pursuits',
     artifacts: 'Artifacts',
     connections: 'Connections',
+    commons: 'Commons',
     map: 'Map',
   };
 
@@ -103,12 +133,15 @@ export default function App() {
         </header>
       )}
 
-      <button className="hamburger" title="Menu" onClick={() => setMenuOpen((o) => !o)}>
-        ☰
-      </button>
+      <div className="top-actions">
+        {clerkEnabled && <UserButton />}
+        <button className="hamburger" title="Menu" onClick={() => setMenuOpen((o) => !o)}>
+          ☰
+        </button>
+      </div>
       {menuOpen && (
         <nav className="menu-sheet">
-          {(['home', 'pursuits', 'artifacts', 'connections', 'map'] as View[]).map((v) => (
+          {(['home', 'pursuits', 'artifacts', 'connections', 'commons', 'map'] as View[]).map((v) => (
             <button
               key={v}
               className={`menu-item ${view === v ? 'active' : ''}`}
@@ -117,12 +150,37 @@ export default function App() {
               {v === 'home' ? '⬡ home' : v}
             </button>
           ))}
+          <div className="menu-rule" />
+          <a className="menu-item" href="/api/export" onClick={() => setMenuOpen(false)}>
+            ⬇ export .db
+          </a>
+          <button className="menu-item" onClick={() => importInput.current?.click()}>
+            ⬆ import .db
+          </button>
         </nav>
       )}
+      <input
+        ref={importInput}
+        type="file"
+        accept=".db,application/octet-stream"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          void onImportPicked(e.target.files?.[0]);
+          e.target.value = '';
+        }}
+      />
 
       {loadError && (
         <div className="notice" style={{ margin: 16 }}>
           {loadError} — is the server running? (npm run dev)
+        </div>
+      )}
+      {transferNote && (
+        <div className="notice" style={{ margin: 16 }}>
+          {transferNote}{' '}
+          <button className="btn ghost" onClick={() => setTransferNote(null)}>
+            ×
+          </button>
         </div>
       )}
 
@@ -134,9 +192,37 @@ export default function App() {
           {view === 'connections' && (
             <Connections state={state} refresh={refresh} runScan={runScan} scanStatus={scanStatus} scanError={scanError} />
           )}
+          {view === 'commons' && <Commons state={state} />}
           {view === 'map' && <GraphView state={state} />}
         </div>
       )}
     </div>
+  );
+}
+
+export default function App({ clerkEnabled }: Props) {
+  if (!clerkEnabled) return <PolygonApp clerkEnabled={false} />;
+  return (
+    <>
+      <SignedOut>
+        <div className="landing">
+          <svg viewBox="-8 -8 416 362" className="hex-svg landing-hex">
+            <polygon points="100,0 300,0 400,173 300,346 100,346 0,173" className="hex-shape" />
+          </svg>
+          <div className="landing-inner">
+            <div className="hex-wordmark">POLYGON</div>
+            <div className="hex-tagline">many sides, one mind</div>
+            <SignInButton mode="modal">
+              <button className="btn primary" style={{ marginTop: 22 }}>
+                Sign in to enter
+              </button>
+            </SignInButton>
+          </div>
+        </div>
+      </SignedOut>
+      <SignedIn>
+        <PolygonApp clerkEnabled />
+      </SignedIn>
+    </>
   );
 }
