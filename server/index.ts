@@ -28,7 +28,10 @@ import {
   exportUserDb,
   importUserDb,
 } from './db';
+import { pursuitIsPublic } from './db';
 import { findConnections, llmConfigured, LlmNotConfiguredError, type ArtifactForScan } from './llm';
+import { emitFeedEvent } from './events';
+import { socialRouter } from './social';
 
 // Clerk is optional: without keys Polygon runs in solo mode, exactly the
 // original local-first behavior, with all rows owned by the 'local' user.
@@ -129,7 +132,11 @@ app.put('/api/pursuits/:id', (req, res) => {
   const id = Number(req.params.id);
   if (!pursuitOwnedBy(uid(req), id)) return res.status(404).json({ error: 'Not your pursuit' });
   try {
+    const wasPublic = pursuitIsPublic(id);
     updatePursuit(uid(req), id, name, description, Boolean(is_public));
+    if (!wasPublic && Boolean(is_public)) {
+      emitFeedEvent({ user_id: uid(req), kind: 'pursuit_public', ref_id: id });
+    }
     res.json({ ok: true });
   } catch (e: unknown) {
     if (e instanceof Error && e.message.includes('UNIQUE')) {
@@ -152,7 +159,9 @@ app.post('/api/artifacts', (req, res) => {
   if (!KINDS.has(kind)) return res.status(400).json({ error: 'kind must be note|code|image|puzzle' });
   if (typeof title !== 'string' || !title.trim()) return res.status(400).json({ error: 'title is required' });
   if (!pursuitOwnedBy(uid(req), pursuit_id)) return res.status(404).json({ error: 'Not your pursuit' });
-  res.status(201).json(createArtifact(pursuit_id, kind, title, String(content)));
+  const artifact = createArtifact(pursuit_id, kind, title, String(content));
+  emitFeedEvent({ user_id: uid(req), kind: 'artifact', ref_id: artifact.id });
+  res.status(201).json(artifact);
 });
 
 app.put('/api/artifacts/:id', (req, res) => {
@@ -195,7 +204,10 @@ app.post('/api/scan', async (req, res) => {
     );
   try {
     const found = await findConnections(artifacts, pairs);
-    recordScanResults(pairs, found);
+    const connectionIds = recordScanResults(pairs, found);
+    for (const id of connectionIds) {
+      emitFeedEvent({ user_id: userId, kind: 'connection', ref_id: id });
+    }
     res.json({
       status: found.length > 0 ? 'found' : 'none_found',
       connections: listConnections(userId),
@@ -225,6 +237,11 @@ app.delete('/api/connections/:id', (req, res) => {
 app.get('/api/community', (_req, res) => {
   res.json({ members: communityMembers(), feed: publicConnections() });
 });
+
+// ── Social module (the Atlas) ──────────────────────────
+// One mount line. Removing it (and the import) restores a fully functional
+// core app — the module-removal test from the design doc.
+app.use('/api/social', socialRouter);
 
 // ── Export / import ────────────────────────────────────
 

@@ -42,6 +42,31 @@ and a feed of connections discovered inside pursuits their owners chose to
 make public. Pursuits are **private by default** — flip ○/◉ on the Pursuits
 page. Moving from solo to signed-in? Export your .db first, sign in, import.
 
+## The Atlas (east vertex: Discover)
+
+The social layer's main surface is **the Atlas** — one shared knowledge map.
+Everyone's public pursuits merge into a collective graph (normalized by name);
+nodes pulse when an artifact landed in the last 24 hours; clicking a pursuit
+reveals its polymaths and their recent work; profiles show a member's public
+polygon, and you follow people from inside the map. A live feed rail runs
+alongside via SSE (10s poll fallback) — **the feed unit is the artifact**:
+you post by learning, there is no free-text post type.
+
+Architecture: the whole social layer is a separable module. Core routes emit
+through a no-op emitter (`server/events.ts`); the module (`server/social/`,
+`src/social/` as a lazy chunk) subscribes at mount. Deleting the mount line
+leaves the core app fully functional — this is tested. Feed storage is
+append-only with filter-on-read (deleted or re-privatized content vanishes
+from the feed automatically). Moderation floor: owner-delete, per-viewer hide
+(localStorage), and a `reports` table on every piece of public content.
+
+Want to see the Atlas alive before your friends arrive?
+
+```bash
+npm run seed:demo            # three demo polymaths with public pursuits
+npm run seed:demo -- --clean # remove them
+```
+
 ## Validate the core bet first
 
 Before trusting the product premise, run the spike:

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import { api } from './api';
 import type { AppState, ScanStatus } from './types';
@@ -9,7 +9,11 @@ import Connections from './components/Connections';
 import Commons from './components/Commons';
 import GraphView from './components/GraphView';
 
-export type View = 'home' | 'pursuits' | 'artifacts' | 'connections' | 'commons' | 'map';
+// The social module ships as its own chunk — the core app never loads Atlas
+// code unless the Discover vertex is visited.
+const Discover = lazy(() => import('./social/Discover'));
+
+export type View = 'home' | 'pursuits' | 'artifacts' | 'connections' | 'commons' | 'map' | 'discover';
 
 // Double-clicks on anything interactive must never trigger the collapse-to-home
 // gesture — text selection, form fiddling and graph dragging all live here.
@@ -118,6 +122,7 @@ function PolygonApp({ clerkEnabled }: Props) {
     connections: 'Connections',
     commons: 'Commons',
     map: 'Map',
+    discover: 'Discover — The Atlas',
   };
 
   return (
@@ -141,7 +146,7 @@ function PolygonApp({ clerkEnabled }: Props) {
       </div>
       {menuOpen && (
         <nav className="menu-sheet">
-          {(['home', 'pursuits', 'artifacts', 'connections', 'commons', 'map'] as View[]).map((v) => (
+          {(['home', 'pursuits', 'artifacts', 'connections', 'commons', 'map', 'discover'] as View[]).map((v) => (
             <button
               key={v}
               className={`menu-item ${view === v ? 'active' : ''}`}
@@ -194,6 +199,11 @@ function PolygonApp({ clerkEnabled }: Props) {
           )}
           {view === 'commons' && <Commons state={state} />}
           {view === 'map' && <GraphView state={state} />}
+          {view === 'discover' && (
+            <Suspense fallback={<div className="graph-empty">Unrolling the Atlas…</div>}>
+              <Discover state={state} />
+            </Suspense>
+          )}
         </div>
       )}
     </div>

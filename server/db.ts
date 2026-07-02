@@ -196,6 +196,13 @@ export function pursuitOwnedBy(userId: string, id: number): boolean {
   );
 }
 
+export function pursuitIsPublic(id: number): boolean {
+  const row = db.prepare('SELECT is_public FROM pursuits WHERE id = ?').get(id) as
+    | { is_public: number }
+    | undefined;
+  return Boolean(row?.is_public);
+}
+
 export function artifactOwnedBy(userId: string, id: number): boolean {
   return Boolean(
     db
@@ -317,7 +324,7 @@ export const recordScanResults = db.transaction(
   (
     pairs: [number, number][],
     found: { artifact_a_id: number; artifact_b_id: number; explanation_text: string }[],
-  ) => {
+  ): number[] => {
     const markScanned = db.prepare(
       'INSERT OR IGNORE INTO scanned_pairs (artifact_a_id, artifact_b_id) VALUES (?, ?)',
     );
@@ -327,9 +334,12 @@ export const recordScanResults = db.transaction(
     const insertConn = db.prepare(
       'INSERT INTO connections (artifact_a_id, artifact_b_id, explanation_text) VALUES (?, ?, ?)',
     );
+    const ids: number[] = [];
     for (const c of found) {
-      insertConn.run(c.artifact_a_id, c.artifact_b_id, c.explanation_text);
+      const info = insertConn.run(c.artifact_a_id, c.artifact_b_id, c.explanation_text);
+      ids.push(Number(info.lastInsertRowid));
     }
+    return ids;
   },
 );
 

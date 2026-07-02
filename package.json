@@ -9,6 +9,7 @@
     "dev:server": "tsx watch server/index.ts",
     "dev:client": "vite",
     "spike": "tsx scripts/spike.ts",
+    "seed:demo": "tsx scripts/seed-demo.ts",
     "build": "tsc --noEmit && vite build",
     "start": "NODE_ENV=production tsx server/index.ts"
   },
