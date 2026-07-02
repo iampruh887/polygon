@@ -46,6 +46,8 @@ export interface AppState {
   connections: Connection[];
   unscanned_pair_count: number;
   llm_configured: boolean;
+  openai_api_key_configured: boolean;
+  server_llm_configured: boolean;
   clerk_enabled: boolean;
 }
 

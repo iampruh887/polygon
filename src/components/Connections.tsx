@@ -35,7 +35,7 @@ export default function Connections({ state, refresh, runScan, scanStatus, scanE
           </button>
           {!state.llm_configured && (
             <p className="status error">
-              No LLM key configured — copy .env.example to .env, add your key, restart the server.
+              No LLM key configured — add your OpenAI key from the menu before scanning.
             </p>
           )}
           {scanMessage[scanStatus] && (

@@ -21,7 +21,7 @@ export interface FoundConnection {
 export class LlmNotConfiguredError extends Error {
   constructor() {
     super(
-      'No LLM API key configured. Copy .env.example to .env and set ANTHROPIC_API_KEY (or OPENAI_API_KEY).',
+      'No LLM API key configured. Add an OpenAI API key in Polygon or set ANTHROPIC_API_KEY/OPENAI_API_KEY on the server.',
     );
     this.name = 'LlmNotConfiguredError';
   }
@@ -90,14 +90,14 @@ async function callAnthropic(system: string, user: string): Promise<string> {
     .join('');
 }
 
-async function callOpenAi(system: string, user: string): Promise<string> {
+async function callOpenAi(system: string, user: string, apiKey: string): Promise<string> {
   const baseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com';
   const model = process.env.LLM_MODEL || 'gpt-4o';
   const res = await fetch(`${baseUrl.replace(/\/$/, '')}/v1/chat/completions`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model,
@@ -155,20 +155,24 @@ export function pairKey(a: number, b: number): string {
   return a < b ? `${a}:${b}` : `${b}:${a}`;
 }
 
-export function llmConfigured(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY);
+export function llmConfigured(openAiApiKey?: string | null): boolean {
+  return Boolean(openAiApiKey || process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY);
 }
 
 export async function findConnections(
   artifacts: ArtifactForScan[],
   pairs: [number, number][],
+  options: { openAiApiKey?: string | null } = {},
 ): Promise<FoundConnection[]> {
   if (pairs.length === 0) return [];
-  if (!llmConfigured()) throw new LlmNotConfiguredError();
+  const openAiApiKey = options.openAiApiKey || process.env.OPENAI_API_KEY || null;
+  if (!llmConfigured(openAiApiKey)) throw new LlmNotConfiguredError();
   const user = buildUserPrompt(artifacts, pairs);
-  const raw = process.env.ANTHROPIC_API_KEY
-    ? await callAnthropic(SYSTEM_PROMPT, user)
-    : await callOpenAi(SYSTEM_PROMPT, user);
+  const raw = options.openAiApiKey
+    ? await callOpenAi(SYSTEM_PROMPT, user, options.openAiApiKey)
+    : process.env.ANTHROPIC_API_KEY
+      ? await callAnthropic(SYSTEM_PROMPT, user)
+      : await callOpenAi(SYSTEM_PROMPT, user, openAiApiKey!);
   // POLYGON_LOG_RAW=1 distinguishes "model said []" from "parse ate the output".
   if (process.env.POLYGON_LOG_RAW) console.error('[llm raw]', raw.slice(0, 2000));
   const allowed = new Set(pairs.map(([a, b]) => pairKey(a, b)));

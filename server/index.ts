@@ -8,6 +8,9 @@ import { fileURLToPath } from 'node:url';
 import {
   upsertUser,
   getUser,
+  userHasOpenAiApiKey,
+  getUserOpenAiApiKey,
+  updateUserOpenAiApiKey,
   listPursuits,
   createPursuit,
   updatePursuit,
@@ -98,15 +101,36 @@ const MAX_PAIRS_PER_SCAN = 60;
 
 app.get('/api/state', (req, res) => {
   const userId = uid(req);
+  const openAiApiKey = getUserOpenAiApiKey(userId);
   res.json({
     user: getUser(userId),
     pursuits: listPursuits(userId),
     artifacts: listArtifacts(userId),
     connections: listConnections(userId),
     unscanned_pair_count: unscannedPairs(userId).length,
-    llm_configured: llmConfigured(),
+    llm_configured: llmConfigured(openAiApiKey),
+    openai_api_key_configured: userHasOpenAiApiKey(userId),
+    server_llm_configured: llmConfigured(),
     clerk_enabled: CLERK_ENABLED,
   });
+});
+
+app.put('/api/settings/openai-key', (req, res) => {
+  const { api_key } = req.body ?? {};
+  if (typeof api_key !== 'string' || !api_key.trim()) {
+    return res.status(400).json({ error: 'OpenAI API key is required' });
+  }
+  const key = api_key.trim();
+  if (!key.startsWith('sk-')) {
+    return res.status(400).json({ error: 'OpenAI API keys usually start with sk-' });
+  }
+  updateUserOpenAiApiKey(uid(req), key);
+  res.json({ ok: true, openai_api_key_configured: true });
+});
+
+app.delete('/api/settings/openai-key', (req, res) => {
+  updateUserOpenAiApiKey(uid(req), '');
+  res.json({ ok: true, openai_api_key_configured: false });
 });
 
 app.post('/api/pursuits', (req, res) => {
@@ -203,7 +227,9 @@ app.post('/api/scan', async (req, res) => {
       }),
     );
   try {
-    const found = await findConnections(artifacts, pairs);
+    const found = await findConnections(artifacts, pairs, {
+      openAiApiKey: getUserOpenAiApiKey(userId),
+    });
     const connectionIds = recordScanResults(pairs, found);
     for (const id of connectionIds) {
       emitFeedEvent({ user_id: userId, kind: 'connection', ref_id: id });
@@ -310,6 +336,6 @@ if (process.env.NODE_ENV === 'production') {
 const PORT = Number(process.env.PORT || 3141);
 app.listen(PORT, () => {
   console.log(
-    `Polygon server on http://localhost:${PORT} (llm ${llmConfigured() ? 'configured' : 'NOT configured'}, auth ${CLERK_ENABLED ? 'clerk' : 'solo mode'})`,
+    `Polygon server on http://localhost:${PORT} (server llm ${llmConfigured() ? 'configured' : 'NOT configured'}, auth ${CLERK_ENABLED ? 'clerk' : 'solo mode'})`,
   );
 });

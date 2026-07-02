@@ -20,6 +20,7 @@ export const SCHEMA = `
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL DEFAULT '',
     image_url TEXT NOT NULL DEFAULT '',
+    openai_api_key TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -100,6 +101,13 @@ function migrate() {
 migrate();
 db.exec(SCHEMA);
 
+const userCols = (db.prepare(`PRAGMA table_info(users)`).all() as { name: string }[]).map(
+  (c) => c.name,
+);
+if (!userCols.includes('openai_api_key')) {
+  db.prepare(`ALTER TABLE users ADD COLUMN openai_api_key TEXT NOT NULL DEFAULT ''`).run();
+}
+
 export interface User {
   id: string;
   name: string;
@@ -146,6 +154,24 @@ export function getUser(id: string): User | undefined {
   return db.prepare('SELECT id, name, image_url FROM users WHERE id = ?').get(id) as
     | User
     | undefined;
+}
+
+export function userHasOpenAiApiKey(id: string): boolean {
+  const row = db.prepare('SELECT openai_api_key FROM users WHERE id = ?').get(id) as
+    | { openai_api_key: string }
+    | undefined;
+  return Boolean(row?.openai_api_key);
+}
+
+export function getUserOpenAiApiKey(id: string): string | null {
+  const row = db.prepare('SELECT openai_api_key FROM users WHERE id = ?').get(id) as
+    | { openai_api_key: string }
+    | undefined;
+  return row?.openai_api_key || null;
+}
+
+export function updateUserOpenAiApiKey(id: string, apiKey: string): void {
+  db.prepare('UPDATE users SET openai_api_key = ? WHERE id = ?').run(apiKey.trim(), id);
 }
 
 export function listPursuits(userId: string): Pursuit[] {

@@ -8,6 +8,8 @@ import ArtifactEditor from './components/ArtifactEditor';
 import Connections from './components/Connections';
 import Commons from './components/Commons';
 import GraphView from './components/GraphView';
+import WelcomeGuide from './components/WelcomeGuide';
+import OpenAiKeySettings from './components/OpenAiKeySettings';
 
 // The social module ships as its own chunk — the core app never loads Atlas
 // code unless the Discover vertex is visited.
@@ -176,6 +178,16 @@ function PolygonApp({ clerkEnabled }: Props) {
           <button className="menu-item" onClick={() => importInput.current?.click()}>
             ⬆ import .db
           </button>
+          {state && (
+            <>
+              <div className="menu-rule" />
+              <OpenAiKeySettings
+                configured={state.openai_api_key_configured}
+                serverConfigured={state.server_llm_configured}
+                refresh={refresh}
+              />
+            </>
+          )}
         </nav>
       )}
       <input
@@ -220,6 +232,7 @@ function PolygonApp({ clerkEnabled }: Props) {
           )}
         </div>
       )}
+      {state && <WelcomeGuide state={state} view={view} navigate={navigate} />}
     </div>
   );
 }

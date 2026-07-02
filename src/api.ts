@@ -42,6 +42,9 @@ export const api = {
     req(`/api/artifacts/${id}`, { method: 'PUT', body: JSON.stringify({ kind, title, content }) }),
   deleteArtifact: (id: number) => req(`/api/artifacts/${id}`, { method: 'DELETE' }),
   deleteConnection: (id: number) => req(`/api/connections/${id}`, { method: 'DELETE' }),
+  saveOpenAiApiKey: (apiKey: string) =>
+    req('/api/settings/openai-key', { method: 'PUT', body: JSON.stringify({ api_key: apiKey }) }),
+  deleteOpenAiApiKey: () => req('/api/settings/openai-key', { method: 'DELETE' }),
   scan: async () => {
     const res = await fetch('/api/scan', { method: 'POST' });
     const body = (await res.json().catch(() => ({}))) as {
