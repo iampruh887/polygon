@@ -205,8 +205,12 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 34px;
-  padding: 40px 20px;
+  gap: 30px;
+  padding: 28px 20px 40px;
+}
+
+.home-brand {
+  text-align: center;
 }
 
 .hex-stage {
@@ -297,6 +301,154 @@ body {
   font-style: italic;
   font-size: 13.5px;
   margin: 0;
+}
+
+/* ── Heatmaps ───────────────────────────────────────── */
+
+.hex-center .hm-month {
+  pointer-events: auto;
+}
+
+.hm-month {
+  appearance: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+}
+
+.hm-month-label {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.hm-month:hover .hm-month-label {
+  color: var(--red);
+}
+
+.hm-grid-month {
+  display: grid;
+  grid-template-columns: repeat(7, 17px);
+  gap: 3px;
+}
+
+.hm-cell {
+  width: 17px;
+  height: 17px;
+  display: inline-block;
+}
+
+.hm-cell.small {
+  width: 11px;
+  height: 11px;
+}
+
+.hm-cell.blank {
+  background: transparent;
+}
+
+.hm-l0 {
+  background: #ece4d4;
+}
+
+.hm-l1 {
+  background: #e8b8ae;
+}
+
+.hm-l2 {
+  background: #cd6f6c;
+}
+
+.hm-l3 {
+  background: #a4161a;
+}
+
+.hm-l4 {
+  background: #6e0e12;
+}
+
+.hm-cell.today {
+  outline: 2px solid var(--ink);
+  outline-offset: -1px;
+}
+
+.hm-hint {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+.hm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(33, 28, 24, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.hm-panel {
+  background: var(--paper-raised);
+  border: 2px solid var(--ink);
+  box-shadow: 6px 6px 0 rgba(33, 28, 24, 0.22);
+  padding: 20px 26px 26px;
+  max-height: 82vh;
+  max-width: min(92vw, 780px);
+  overflow: auto;
+}
+
+.hm-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 6px;
+}
+
+.hm-panel-head h2 {
+  margin: 0;
+}
+
+.hm-year {
+  margin-top: 18px;
+}
+
+.hm-year-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.hm-year-label {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.hm-year-total {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.hm-year-grid {
+  display: flex;
+  gap: 2px;
+}
+
+.hm-week {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 /* ── Generic page shell ─────────────────────────────── */
