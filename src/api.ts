@@ -19,6 +19,8 @@ export const api = {
   deletePursuit: (id: number) => req(`/api/pursuits/${id}`, { method: 'DELETE' }),
   createArtifact: (pursuit_id: number, kind: ArtifactKind, title: string, content: string) =>
     req('/api/artifacts', { method: 'POST', body: JSON.stringify({ pursuit_id, kind, title, content }) }),
+  updateArtifact: (id: number, kind: ArtifactKind, title: string, content: string) =>
+    req(`/api/artifacts/${id}`, { method: 'PUT', body: JSON.stringify({ kind, title, content }) }),
   deleteArtifact: (id: number) => req(`/api/artifacts/${id}`, { method: 'DELETE' }),
   deleteConnection: (id: number) => req(`/api/connections/${id}`, { method: 'DELETE' }),
   scan: async () => {

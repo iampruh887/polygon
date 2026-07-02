@@ -127,6 +127,7 @@ export default function GraphView({ state }: Props) {
         edges={edges}
         nodeTypes={nodeTypes}
         fitView
+        zoomOnDoubleClick={false}
         proOptions={{ hideAttribution: false }}
         onEdgeClick={(_e, edge) => {
           if (edge.id.startsWith('c')) {

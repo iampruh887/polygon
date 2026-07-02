@@ -40,7 +40,9 @@ For each candidate pair, decide whether there is a REAL, SPECIFIC connection bet
 - reveal something the person plausibly had not noticed — a shared underlying principle, a transferable technique, a structural analogy
 - survive the test: "would a thoughtful person say 'huh, I hadn't seen it that way'?"
 
-REJECT anything generic. Forbidden: "both require practice", "both involve creativity", "both are about problem solving", "both need patience", or any connection that would be equally true of two random hobbies. Reporting zero connections is a perfectly good outcome — most pairs have none.
+REJECT anything generic. Forbidden: "both require practice", "both involve creativity", "both are about problem solving", "both need patience", or any connection that would be equally true of two random hobbies. Reporting zero connections for a pair is a perfectly good outcome.
+
+Calibration: do not require profundity — require specificity. If the two artifacts share a nameable underlying principle, mechanism, or structure that is actually present in both texts, report it, even if it is modest. The test is whether the link is SPECIFIC to these two artifacts, not whether it is deep.
 
 Respond with ONLY a JSON array (no markdown fences, no prose). Each element:
 {"artifact_a_id": <id>, "artifact_b_id": <id>, "explanation_text": "<2-4 sentences naming the specific concept in each artifact and the underlying link>"}
@@ -167,6 +169,8 @@ export async function findConnections(
   const raw = process.env.ANTHROPIC_API_KEY
     ? await callAnthropic(SYSTEM_PROMPT, user)
     : await callOpenAi(SYSTEM_PROMPT, user);
+  // POLYGON_LOG_RAW=1 distinguishes "model said []" from "parse ate the output".
+  if (process.env.POLYGON_LOG_RAW) console.error('[llm raw]', raw.slice(0, 2000));
   const allowed = new Set(pairs.map(([a, b]) => pairKey(a, b)));
   return parseConnections(raw, allowed);
 }

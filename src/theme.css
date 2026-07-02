@@ -47,60 +47,307 @@ body {
 .masthead {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 14px 28px;
+  gap: 16px;
+  padding: 10px 28px;
   border-bottom: 2px solid var(--ink);
   background: var(--paper);
 }
 
-.wordmark {
+.wordmark-btn {
+  appearance: none;
+  border: none;
+  background: none;
+  cursor: pointer;
   font-family: var(--serif);
-  font-size: 26px;
+  font-size: 19px;
   font-weight: 700;
   letter-spacing: 0.06em;
-  margin: 0;
+  color: var(--ink);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.wordmark .mark {
+.wordmark-btn:hover .wordmark-text {
   color: var(--red);
-  margin-right: 10px;
-  font-size: 22px;
 }
 
-.masthead .tagline {
+.wordmark-btn .mark {
+  color: var(--red);
+  font-size: 17px;
+}
+
+.masthead .page-title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-soft);
+}
+
+.masthead .dblclick-hint {
+  margin-left: auto;
+  margin-right: 48px;
+  font-size: 11px;
   color: var(--ink-faint);
   font-style: italic;
-  font-family: var(--serif);
-  font-size: 14px;
 }
 
-.masthead nav {
-  margin-left: auto;
+/* ── Hamburger + menu ───────────────────────────────── */
+
+.hamburger {
+  position: fixed;
+  top: 8px;
+  right: 12px;
+  z-index: 60;
+  appearance: none;
+  border: 1px solid var(--ink);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-size: 15px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.hamburger:hover {
+  background: var(--red-wash);
+}
+
+.menu-sheet {
+  position: fixed;
+  top: 44px;
+  right: 12px;
+  z-index: 60;
   display: flex;
-  gap: 4px;
+  flex-direction: column;
+  background: var(--paper-raised);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 rgba(33, 28, 24, 0.18);
+  min-width: 170px;
 }
 
-.tab {
+.menu-item {
   appearance: none;
   border: none;
   background: none;
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 8px 14px;
+  text-align: left;
+  padding: 10px 16px;
   cursor: pointer;
   color: var(--ink-soft);
-  border-bottom: 2px solid transparent;
+  border-bottom: 1px solid var(--line);
 }
 
-.tab:hover {
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:hover {
+  background: var(--red-wash);
   color: var(--ink);
 }
 
-.tab.active {
+.menu-item.active {
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* ── Page fold animation ────────────────────────────── */
+
+.page-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  animation: unfold 300ms ease both;
+  transform-origin: 50% 42%;
+}
+
+.page-wrap.collapsing {
+  animation: fold 330ms ease-in both;
+  pointer-events: none;
+}
+
+@keyframes unfold {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+    clip-path: polygon(38% 12%, 62% 12%, 74% 50%, 62% 88%, 38% 88%, 26% 50%);
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+    clip-path: polygon(25% -60%, 75% -60%, 130% 50%, 75% 160%, 25% 160%, -30% 50%);
+  }
+}
+
+@keyframes fold {
+  from {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    clip-path: polygon(25% -60%, 75% -60%, 130% 50%, 75% 160%, 25% 160%, -30% 50%);
+  }
+  to {
+    transform: scale(0.04) rotate(-4deg);
+    opacity: 0;
+    clip-path: polygon(38% 12%, 62% 12%, 74% 50%, 62% 88%, 38% 88%, 26% 50%);
+  }
+}
+
+/* ── Home: the polygon is the navigation ────────────── */
+
+.home {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  padding: 40px 20px;
+}
+
+.hex-stage {
+  position: relative;
+  width: min(46vh, 420px);
+}
+
+.hex-svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.hex-shape {
+  fill: var(--paper-raised);
+  stroke: var(--red);
+  stroke-width: 3;
+}
+
+.hex-dot {
+  fill: var(--red);
+}
+
+.hex-dot.faint {
+  fill: var(--line-strong);
+}
+
+.hex-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.hex-wordmark {
+  font-family: var(--serif);
+  font-size: clamp(26px, 4.6vh, 42px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.hex-tagline {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--ink-faint);
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.vertex-nav {
+  position: absolute;
+  appearance: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--serif);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.vertex-label {
+  font-size: clamp(17px, 2.6vh, 24px);
+  font-weight: 700;
+  color: var(--ink);
+  border-bottom: 2px solid transparent;
+}
+
+.vertex-nav:hover .vertex-label {
   color: var(--red);
   border-bottom-color: var(--red);
+}
+
+.vertex-count {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.home-hint {
+  color: var(--ink-faint);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13.5px;
+  margin: 0;
+}
+
+/* ── Generic page shell ─────────────────────────────── */
+
+.page {
+  flex: 1;
+  overflow-y: auto;
+  padding: 26px 32px 60px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.page.narrow {
+  max-width: 760px;
+}
+
+/* ── Pursuit polygon graph ──────────────────────────── */
+
+.pursuit-graph {
+  position: relative;
+  height: 280px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper-raised);
+  transition: height 220ms ease;
+}
+
+.pursuit-graph.expanded {
+  height: 560px;
+}
+
+.expand-toggle {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 5;
+  font-size: 12px;
+}
+
+.node-pursuit.round {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 20px;
+}
+
+.node-pursuit .node-sub {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 10.5px;
+  opacity: 0.85;
 }
 
 /* ── Buttons ────────────────────────────────────────── */
@@ -439,6 +686,151 @@ h2 .count {
 
 .connection-card:hover .delete {
   opacity: 1;
+}
+
+/* ── Artifact editor (Obsidian-Polygon mix) ─────────── */
+
+.editor-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.editor-rail {
+  border-right: 1px solid var(--line-strong);
+  background: #f2ece2;
+  padding: 16px 14px;
+  overflow-y: auto;
+}
+
+.rail-list {
+  margin-top: 14px;
+}
+
+.rail-item {
+  position: relative;
+  padding: 10px 26px 10px 10px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.rail-item:hover {
+  background: var(--red-wash);
+}
+
+.rail-item.active {
+  background: var(--paper-raised);
+  border-left: 3px solid var(--red);
+  padding-left: 7px;
+}
+
+.rail-title {
+  font-weight: 600;
+  font-size: 13.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-meta {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+.rail-item .delete {
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  opacity: 0;
+}
+
+.rail-item:hover .delete {
+  opacity: 1;
+}
+
+.editor-pane {
+  display: flex;
+  flex-direction: column;
+  padding: 26px 36px 30px;
+  min-height: 0;
+  max-width: 860px;
+  width: 100%;
+}
+
+.editor-title {
+  font-family: var(--serif);
+  font-size: 27px;
+  font-weight: 700;
+  border: none;
+  background: none;
+  color: var(--ink);
+  padding: 0 0 10px;
+  border-bottom: 2px solid var(--line-strong);
+}
+
+.editor-title:focus {
+  outline: none;
+  border-bottom-color: var(--red);
+}
+
+.editor-title::placeholder {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+.editor-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.editor-meta select {
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.editor-meta .editor-status {
+  margin-left: auto;
+  font-style: italic;
+}
+
+.editor-body {
+  flex: 1;
+  min-height: 300px;
+  resize: none;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.7;
+  padding: 6px 0;
+}
+
+.editor-body.code {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  line-height: 1.6;
+  background: #efe8db;
+  padding: 12px;
+}
+
+.editor-body:focus {
+  outline: none;
+}
+
+.editor-body::placeholder {
+  color: var(--ink-faint);
+  font-style: italic;
 }
 
 /* ── Empty states ───────────────────────────────────── */
