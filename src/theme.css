@@ -1,0 +1,530 @@
+/* Polygon — editorial theme. Paper, ink, and red. No gradients, no glass. */
+
+:root {
+  --paper: #f7f3ec;
+  --paper-raised: #fffdf8;
+  --ink: #211c18;
+  --ink-soft: #5c534b;
+  --ink-faint: #948a80;
+  --line: #e2d9cc;
+  --line-strong: #c9bda9;
+  --red: #a4161a;
+  --red-deep: #6e0e12;
+  --red-wash: #f6e3de;
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+  --sans: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'SFMono-Regular', 'Cascadia Mono', Consolas, 'Liberation Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+
+.masthead {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 28px;
+  border-bottom: 2px solid var(--ink);
+  background: var(--paper);
+}
+
+.wordmark {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.wordmark .mark {
+  color: var(--red);
+  margin-right: 10px;
+  font-size: 22px;
+}
+
+.masthead .tagline {
+  color: var(--ink-faint);
+  font-style: italic;
+  font-family: var(--serif);
+  font-size: 14px;
+}
+
+.masthead nav {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.tab {
+  appearance: none;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tab.active {
+  color: var(--red);
+  border-bottom-color: var(--red);
+}
+
+/* ── Buttons ────────────────────────────────────────── */
+
+.btn {
+  appearance: none;
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  background: var(--paper-raised);
+  color: var(--ink);
+  transition: background 120ms ease;
+}
+
+.btn:hover {
+  background: var(--red-wash);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn.primary {
+  background: var(--red);
+  border-color: var(--red-deep);
+  color: #fdf6ef;
+  font-weight: 600;
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: var(--red-deep);
+}
+
+.btn.ghost {
+  border-color: transparent;
+  color: var(--ink-faint);
+  padding: 4px 8px;
+}
+
+.btn.ghost:hover {
+  color: var(--red);
+  background: none;
+}
+
+/* ── Layout ─────────────────────────────────────────── */
+
+.ledger {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+.ledger-main {
+  padding: 28px;
+  overflow-y: auto;
+  border-right: 1px solid var(--line-strong);
+}
+
+.ledger-side {
+  padding: 28px 24px;
+  overflow-y: auto;
+  background: #f2ece2;
+}
+
+section + section {
+  margin-top: 36px;
+}
+
+h2 {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+h2 .count {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+.section-rule {
+  border: none;
+  border-top: 1px solid var(--line-strong);
+  margin: 0 0 16px;
+}
+
+/* ── Pursuit cards ──────────────────────────────────── */
+
+.pursuit-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.pursuit-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line-strong);
+  border-top: 3px solid var(--red);
+  padding: 14px 16px;
+  position: relative;
+}
+
+.pursuit-card h3 {
+  font-family: var(--serif);
+  font-size: 17px;
+  margin: 0 0 2px;
+}
+
+.pursuit-card .desc {
+  color: var(--ink-soft);
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+
+.pursuit-card .meta {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.pursuit-card .quiet {
+  color: var(--red);
+  font-style: italic;
+}
+
+.pursuit-card .delete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  opacity: 0;
+}
+
+.pursuit-card:hover .delete {
+  opacity: 1;
+}
+
+/* ── Forms ──────────────────────────────────────────── */
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--paper-raised);
+  border: 1px dashed var(--line-strong);
+  padding: 14px 16px;
+  margin-top: 12px;
+}
+
+.inline-form input,
+.inline-form select,
+.inline-form textarea {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  min-width: 0;
+}
+
+.inline-form input:focus,
+.inline-form select:focus,
+.inline-form textarea:focus {
+  outline: none;
+  border-color: var(--red);
+}
+
+.inline-form textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.form-row input[name='title'] {
+  flex: 1;
+}
+
+/* ── Artifact list ──────────────────────────────────── */
+
+.artifact-item {
+  display: flex;
+  gap: 14px;
+  padding: 13px 4px;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+
+.artifact-item .kind {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--red);
+  border: 1px solid var(--red);
+  padding: 2px 6px;
+  height: fit-content;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.artifact-item .body {
+  min-width: 0;
+  flex: 1;
+}
+
+.artifact-item h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.artifact-item .body .meta {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+
+.artifact-item .content {
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 4px 0 0;
+}
+
+.artifact-item .content.code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: #efe8db;
+  padding: 6px 8px;
+}
+
+.artifact-item .delete {
+  opacity: 0;
+}
+
+.artifact-item:hover .delete {
+  opacity: 1;
+}
+
+/* ── Connection feed ────────────────────────────────── */
+
+.scan-box {
+  border: 2px solid var(--ink);
+  background: var(--paper-raised);
+  padding: 16px;
+  margin-bottom: 22px;
+}
+
+.scan-box .status {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 10px 0 0;
+}
+
+.scan-box .status.error {
+  color: var(--red-deep);
+  font-weight: 600;
+}
+
+.connection-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--red);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.connection-card .endpoints {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.connection-card .endpoints .link-mark {
+  color: var(--red);
+}
+
+.connection-card .endpoints .pursuit-tag {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.connection-card .explanation {
+  font-family: var(--serif);
+  font-size: 14.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.connection-card .when {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 8px;
+}
+
+.connection-card .delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+}
+
+.connection-card:hover .delete {
+  opacity: 1;
+}
+
+/* ── Empty states ───────────────────────────────────── */
+
+.empty {
+  color: var(--ink-faint);
+  font-style: italic;
+  font-family: var(--serif);
+  font-size: 14px;
+  padding: 18px 0;
+}
+
+.notice {
+  border: 1px solid var(--line-strong);
+  background: var(--red-wash);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--red-deep);
+}
+
+/* ── Graph view ─────────────────────────────────────── */
+
+.graph-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.graph-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-faint);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+}
+
+.node-pursuit {
+  background: var(--red);
+  color: #fdf6ef;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 10px 18px;
+  border: 2px solid var(--red-deep);
+}
+
+.node-artifact {
+  background: var(--paper-raised);
+  border: 1px solid var(--ink);
+  padding: 8px 12px;
+  font-size: 12.5px;
+  max-width: 190px;
+}
+
+.node-artifact .kind-dot {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--red);
+}
+
+.edge-detail {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  right: 18px;
+  max-width: 560px;
+  margin: 0 auto;
+  background: var(--paper-raised);
+  border: 2px solid var(--ink);
+  padding: 14px 18px;
+  box-shadow: 4px 4px 0 rgba(33, 28, 24, 0.18);
+  z-index: 10;
+}
+
+.edge-detail .explanation {
+  font-family: var(--serif);
+  font-size: 14.5px;
+  margin: 6px 0 0;
+}
+
+.react-flow__attribution {
+  background: transparent;
+}

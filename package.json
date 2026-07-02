@@ -1,0 +1,37 @@
+{
+  "name": "polygon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A local-first tool for polymaths — artifact logging, cross-domain connection discovery, and a living knowledge map.",
+  "scripts": {
+    "dev": "concurrently -n server,client -c red,yellow \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "tsx watch server/index.ts",
+    "dev:client": "vite",
+    "spike": "tsx scripts/spike.ts",
+    "build": "tsc --noEmit && vite build",
+    "start": "NODE_ENV=production tsx server/index.ts"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.11.1",
+    "better-sqlite3": "^12.11.1",
+    "dagre": "^0.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/dagre": "^0.7.54",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "concurrently": "^10.0.3",
+    "tsx": "^4.22.5",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.3"
+  }
+}
