@@ -180,7 +180,7 @@ body {
   position: relative;
 }
 
-.landing-hex {
+.landing svg.landing-hex {
   width: min(52vh, 440px);
 }
 

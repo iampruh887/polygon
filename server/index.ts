@@ -40,7 +40,14 @@ app.use(express.json({ limit: '4mb' }));
 let clerkAuth: ((req: Request) => { userId: string | null }) | null = null;
 if (CLERK_ENABLED) {
   const { clerkMiddleware, getAuth } = await import('@clerk/express');
-  app.use(clerkMiddleware());
+  // Reuse the frontend's key so .env holds a single publishable key.
+  app.use(
+    clerkMiddleware({
+      publishableKey:
+        process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY,
+      secretKey: process.env.CLERK_SECRET_KEY,
+    }),
+  );
   clerkAuth = (req) => getAuth(req);
 }
 
