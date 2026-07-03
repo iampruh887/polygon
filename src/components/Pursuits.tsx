@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { ReactFlow, Background, Handle, Position, type Node, type Edge, type NodeProps } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { api } from '../api';
+import { toast } from '../toast';
 import type { AppState } from '../types';
 
 interface Props {
@@ -85,6 +86,7 @@ export default function Pursuits({ state, refresh }: Props) {
       await api.updatePursuit(id, editName, editDesc, isPublic);
       setEditingId(null);
       setFormError(null);
+      toast('Pursuit saved');
       await refresh();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Could not save pursuit');
@@ -95,6 +97,7 @@ export default function Pursuits({ state, refresh }: Props) {
     const p = state.pursuits.find((x) => x.id === id);
     if (!p) return;
     await api.updatePursuit(id, p.name, p.description, !p.is_public);
+    toast(p.is_public ? `“${p.name}” is now private` : `“${p.name}” is now public`);
     await refresh();
   }
 
@@ -108,6 +111,7 @@ export default function Pursuits({ state, refresh }: Props) {
     if (!name.trim()) return;
     try {
       await api.createPursuit(name, desc);
+      toast(`Pursuit “${name.trim()}” added`);
       setName('');
       setDesc('');
       setFormError(null);
@@ -218,6 +222,7 @@ export default function Pursuits({ state, refresh }: Props) {
                       onClick={async () => {
                         if (confirm(`Delete "${p.name}" and its ${p.artifact_count} artifact(s)?`)) {
                           await api.deletePursuit(p.id);
+                          toast(`“${p.name}” deleted`, 'error');
                           await refresh();
                         }
                       }}

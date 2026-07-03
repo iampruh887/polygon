@@ -11,6 +11,7 @@ import GraphView from './components/GraphView';
 import WelcomeGuide from './components/WelcomeGuide';
 import OpenAiKeySettings from './components/OpenAiKeySettings';
 import FeedbackButton from './components/FeedbackButton';
+import ToastHost from './components/ToastHost';
 
 // The social module ships as its own chunk — the core app never loads Atlas
 // code unless the Discover vertex is visited.
@@ -235,6 +236,7 @@ function PolygonApp({ clerkEnabled }: Props) {
       )}
       {state && <WelcomeGuide state={state} view={view} navigate={navigate} />}
       {state && <FeedbackButton />}
+      <ToastHost />
     </div>
   );
 }

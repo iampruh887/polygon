@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api';
+import { toast } from '../toast';
 import type { AppState, ArtifactKind } from '../types';
 
 interface Props {
@@ -50,9 +51,11 @@ export default function ArtifactEditor({ state, refresh }: Props) {
         const created = (await api.createArtifact(pursuitId, kind, title, content)) as { id: number };
         setSelectedId(created.id);
         setStatus('Logged.');
+        toast(`Artifact “${title.trim()}” logged`);
       } else {
         await api.updateArtifact(selectedId, kind, title, content);
         setStatus('Saved.');
+        toast('Artifact saved');
       }
       setDirty(false);
       await refresh();
@@ -90,6 +93,7 @@ export default function ArtifactEditor({ state, refresh }: Props) {
                   e.stopPropagation();
                   if (confirm(`Delete "${a.title}"? Its connections are removed too.`)) {
                     await api.deleteArtifact(a.id);
+                    toast(`“${a.title}” deleted`, 'error');
                     if (a.id === selectedId) startNew();
                     await refresh();
                   }
