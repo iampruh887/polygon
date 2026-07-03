@@ -1,6 +1,6 @@
 // Vercel serverless entry: wraps the whole Express app as one function.
-// The catch-all filename routes every /api/* request here; Express then does
-// its own routing. The app is built once per warm instance and reused.
+// A rewrite in vercel.json funnels every /api/* path (any depth) to this file;
+// Express then does its own routing. Built once per warm instance and reused.
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { buildApp } from '../server/app.js';
 
