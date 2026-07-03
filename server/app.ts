@@ -26,6 +26,7 @@ import {
   publicConnections,
   exportUserJson,
   importUserJson,
+  query,
   type UserExport,
 } from './db.js';
 import { findConnections, llmConfigured, LlmNotConfiguredError, type ArtifactForScan } from './llm.js';
@@ -42,6 +43,17 @@ const MAX_PAIRS_PER_SCAN = 60;
 export async function buildApp(): Promise<Express> {
   const app = express();
   app.use(express.json({ limit: '4mb' }));
+
+  // Unauthenticated liveness + DB reachability. Mounted before the auth gate so
+  // it works without a session — for uptime checks and deploy verification.
+  app.get('/api/health', async (_req, res) => {
+    try {
+      await query('SELECT 1');
+      res.json({ ok: true, db: 'up', clerk: CLERK_ENABLED, vercel: ON_VERCEL });
+    } catch (e) {
+      res.status(503).json({ ok: false, db: 'down', error: e instanceof Error ? e.message : 'db error' });
+    }
+  });
 
   let clerkAuth: ((req: Request) => { userId: string | null }) | null = null;
   if (CLERK_ENABLED) {
