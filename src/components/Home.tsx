@@ -59,8 +59,24 @@ const VERTICES: VertexNav[] = [
   },
 ];
 
+// Around the hexagon the vertex labels sit at its corners; that geometry has no
+// room on a phone, so below this width nav becomes a grid of buttons instead.
+function useIsMobile(): boolean {
+  const [mobile, setMobile] = useState(
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const on = () => setMobile(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return mobile;
+}
+
 export default function Home({ state, navigate }: Props) {
   const [showYears, setShowYears] = useState(false);
+  const isMobile = useIsMobile();
   const counts = useMemo(() => countsByDay(state.artifacts), [state.artifacts]);
   const now = new Date();
 
@@ -108,16 +124,31 @@ export default function Home({ state, navigate }: Props) {
           />
         </div>
 
-        {VERTICES.map((v) => {
-          const n = v.countOf(state);
-          return (
-            <button key={v.view} className="vertex-nav" style={v.style} onClick={() => navigate(v.view)}>
-              <span className="vertex-label">{v.label}</span>
-              {!Number.isNaN(n) && <span className="vertex-count">{n}</span>}
-            </button>
-          );
-        })}
+        {!isMobile &&
+          VERTICES.map((v) => {
+            const n = v.countOf(state);
+            return (
+              <button key={v.view} className="vertex-nav" style={v.style} onClick={() => navigate(v.view)}>
+                <span className="vertex-label">{v.label}</span>
+                {!Number.isNaN(n) && <span className="vertex-count">{n}</span>}
+              </button>
+            );
+          })}
       </div>
+
+      {isMobile && (
+        <div className="vertex-grid">
+          {VERTICES.map((v) => {
+            const n = v.countOf(state);
+            return (
+              <button key={v.view} className="vertex-grid-btn" onClick={() => navigate(v.view)}>
+                <span className="vertex-label">{v.label}</span>
+                {!Number.isNaN(n) && <span className="vertex-count">{n}</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {showYears && (
         <div className="hm-overlay" onClick={() => setShowYears(false)}>
           <div className="hm-panel" onClick={(e) => e.stopPropagation()}>

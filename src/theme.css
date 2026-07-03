@@ -1732,3 +1732,90 @@ body,
 [data-theme='dark'] .react-flow__edge-path[style*='c9bda9'] {
   stroke: var(--line-strong) !important;
 }
+
+/* ── Mobile (phone) ─────────────────────────────────── */
+@media (max-width: 640px) {
+  body { font-size: 14px; }
+
+  /* Header: keep the page title clear of the fixed ☾ / ☰ controls */
+  .masthead { padding: 8px 88px 8px 14px; gap: 10px; }
+  .masthead .page-title { font-size: 13.5px; }
+  .top-actions { top: 6px; right: 8px; gap: 6px; }
+  .menu-sheet { top: 42px; right: 8px; min-width: 150px; }
+
+  /* Signed-out landing hexagon fits the narrow viewport */
+  .landing svg.landing-hex { width: min(88vw, 420px); }
+
+  /* Home: hexagon + heatmap centerpiece, nav as a button grid below */
+  .home { gap: 22px; padding: 18px 16px 32px; }
+  .hex-stage { width: min(82vw, 330px); }
+  .hex-wordmark { font-size: clamp(24px, 8vw, 34px); }
+  .hm-grid-month { grid-template-columns: repeat(7, 14px); }
+  .hex-center .hm-cell { width: 14px; height: 14px; }
+
+  .vertex-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: min(92vw, 360px);
+  }
+  .vertex-grid-btn {
+    appearance: none;
+    background: var(--paper-raised);
+    border: 1px solid var(--line-strong);
+    border-left: 3px solid var(--red);
+    padding: 13px 14px;
+    cursor: pointer;
+    font-family: var(--serif);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    text-align: left;
+    color: var(--ink);
+  }
+  .vertex-grid-btn:active { background: var(--red-wash); }
+
+  /* Discover: Atlas on top, feed rail stacked below */
+  .discover-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 52vh auto;
+    overflow-y: auto;
+  }
+  .feed-rail { border-left: none; border-top: 1px solid var(--line-strong); }
+  .atlas-panel { width: 100%; box-shadow: none; }
+  .atlas-solo-note { max-width: 92%; font-size: 11px; }
+
+  /* Editor: file rail becomes a short top strip, editor below */
+  .editor-layout { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .editor-rail { border-right: none; border-bottom: 1px solid var(--line-strong); max-height: 34vh; }
+  .editor-pane { padding: 16px 15px; max-width: none; }
+  .editor-title { font-size: 22px; }
+  .editor-meta { flex-wrap: wrap; gap: 8px; }
+  .editor-meta .editor-status { margin-left: 0; }
+
+  /* Pages: tighter padding, single-column card grids */
+  .page { padding: 16px 14px 48px; }
+  .page.narrow { padding: 16px 14px 48px; }
+  .pursuit-row { grid-template-columns: 1fr; }
+  .member-row { grid-template-columns: 1fr; }
+  .pursuit-graph { height: 220px; }
+  .pursuit-graph.expanded { height: 380px; }
+
+  /* Forms stack full-width so nothing clips at phone widths */
+  .inline-form { flex-direction: column; align-items: stretch; }
+  .inline-form > input,
+  .inline-form > select,
+  .inline-form > button,
+  .inline-form > textarea { width: 100%; }
+  .inline-form .form-row { flex-direction: column; }
+  .inline-form .form-row select,
+  .inline-form .form-row input { width: 100%; }
+
+  /* Year-history overlay uses the full width */
+  .hm-panel { padding: 16px 16px 20px; }
+
+  /* Fold animation is jarring on a small viewport — cross-fade instead */
+  .page-wrap { animation: none; }
+  .page-wrap.collapsing { animation: mobilefade 200ms ease-in both; }
+  @keyframes mobilefade { to { opacity: 0; } }
+}
