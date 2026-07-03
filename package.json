@@ -20,7 +20,6 @@
     "@clerk/express": "^2.1.35",
     "@clerk/react": "^6.11.3",
     "@xyflow/react": "^12.11.1",
-    "better-sqlite3": "^12.11.1",
     "dagre": "^0.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -29,6 +28,7 @@
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "better-sqlite3": "^12.11.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/dagre": "^0.7.54",
     "@types/express": "^5.0.6",
