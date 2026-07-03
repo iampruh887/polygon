@@ -37,8 +37,8 @@ export default function Discover({ state }: Props) {
     reload();
   }, [reload]);
 
-  // SSE nudge (poll fallback inside): something changed → refetch.
-  useLiveTick(reload);
+  // Polling floor + SSE when the server supports it → refetch on change.
+  useLiveTick(reload, state.sse_enabled);
 
   const openProfile = useCallback((userId: string) => setPanel({ type: 'profile', userId }), []);
 

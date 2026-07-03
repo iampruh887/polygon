@@ -49,6 +49,7 @@ export interface AppState {
   openai_api_key_configured: boolean;
   server_llm_configured: boolean;
   clerk_enabled: boolean;
+  sse_enabled: boolean;
 }
 
 export interface CommunityMember extends User {

@@ -12,17 +12,31 @@ living knowledge map.
 
 ## Run it
 
+Polygon stores data in **Postgres** (Supabase). Point `DATABASE_URL` at a
+database, apply the schema, then start:
+
 ```bash
 npm install
-cp .env.example .env   # add your ANTHROPIC_API_KEY (or OPENAI_API_KEY)
-npm run dev            # server on :3141, app on http://localhost:5173
+cp .env.example .env       # set DATABASE_URL + your ANTHROPIC_API_KEY (or OPENAI_API_KEY)
+npm run migrate:pg         # create the tables
+npm run migrate:data       # (optional) copy an old data/polygon.db into Postgres
+npm run dev                # server on :3141, app on http://localhost:5173
 ```
 
-Everything lives on your machine. The database is a single SQLite file at
-`data/polygon.db` — copying that file is your backup, and the ☰ menu offers
-explicit **⬇ export .db / ⬆ import .db** round-trips (import replaces your
-data, transactionally, with id remapping). Your API key stays in `.env`,
-which is gitignored.
+`DATABASE_URL` is the Supabase **transaction pooler** string (Settings →
+Database → Connection string → Transaction, port 6543 — serverless-safe). For
+a purely local database, `supabase start` or any Postgres works too. The ☰ menu
+offers **⬇ export .json / ⬆ import .json** round-trips (import replaces your
+data, transactionally, with id remapping). Secrets stay in `.env` (gitignored).
+
+## Deploy to Vercel
+
+The Express app is wrapped as one serverless function ([api/[...path].ts](api/[...path].ts));
+Vite builds the frontend to static. In the Vercel project settings add the same
+env vars (`DATABASE_URL`, `ANTHROPIC_API_KEY`/`OPENAI_API_KEY`,
+`VITE_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`), then `vercel --prod`. The live
+Atlas feed uses SSE locally and polls on Vercel (serverless can't hold SSE
+connections) — the client reads `sse_enabled` and picks automatically.
 
 ## Accounts & the Commons (optional)
 
@@ -66,6 +80,13 @@ Want to see the Atlas alive before your friends arrive?
 npm run seed:demo            # three demo polymaths with public pursuits
 npm run seed:demo -- --clean # remove them
 ```
+
+## Stack
+
+Vite + React + TypeScript frontend · Express API (async, wrapped as a Vercel
+function) · Postgres (Supabase) via `pg` with a transaction-pooled client ·
+Clerk auth (optional) · Anthropic or OpenAI-compatible LLM, server key or
+per-user bring-your-own.
 
 ## Validate the core bet first
 

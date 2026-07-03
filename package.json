@@ -10,6 +10,8 @@
     "dev:client": "vite",
     "spike": "tsx scripts/spike.ts",
     "seed:demo": "tsx scripts/seed-demo.ts",
+    "migrate:pg": "tsx scripts/migrate-pg.ts",
+    "migrate:data": "tsx scripts/migrate-data.ts",
     "build": "tsc --noEmit && vite build",
     "start": "NODE_ENV=production tsx server/index.ts"
   },
@@ -22,6 +24,7 @@
     "dagre": "^0.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "pg": "^8.22.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
@@ -30,6 +33,7 @@
     "@types/dagre": "^0.7.54",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.0",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",

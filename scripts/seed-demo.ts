@@ -1,8 +1,7 @@
 // Seed demo polymaths so the Atlas has a world in it before real friends
 // arrive. Run: npm run seed:demo — remove with: npm run seed:demo -- --clean
 // All demo rows use user ids prefixed 'demo_' and are safe to delete anytime.
-import { db } from '../server/db';
-import '../server/social/db'; // ensure social tables exist
+import { query, tx } from '../server/pg';
 
 const clean = process.argv.includes('--clean');
 
@@ -36,42 +35,43 @@ const DEMO_USERS = [
   ]},
 ];
 
-function cleanDemo(): void {
+async function cleanDemo() {
   const ids = DEMO_USERS.map((u) => u.id);
-  const ph = ids.map(() => '?').join(',');
-  db.prepare(`DELETE FROM feed_events WHERE user_id IN (${ph})`).run(...ids);
-  db.prepare(`DELETE FROM follows WHERE follower_id IN (${ph}) OR followee_id IN (${ph})`).run(...ids, ...ids);
-  db.prepare(`DELETE FROM pursuits WHERE user_id IN (${ph})`).run(...ids); // cascades artifacts/connections
-  db.prepare(`DELETE FROM users WHERE id IN (${ph})`).run(...ids);
+  await query(`DELETE FROM feed_events WHERE user_id = ANY($1)`, [ids]);
+  await query(`DELETE FROM follows WHERE follower_id = ANY($1) OR followee_id = ANY($1)`, [ids]);
+  await query(`DELETE FROM pursuits WHERE user_id = ANY($1)`, [ids]); // cascades artifacts/connections
+  await query(`DELETE FROM users WHERE id = ANY($1)`, [ids]);
   console.log('Demo data removed.');
 }
 
-function seed(): void {
-  const insUser = db.prepare('INSERT OR IGNORE INTO users (id, name, image_url) VALUES (?, ?, ?)');
-  const insPursuit = db.prepare(
-    'INSERT INTO pursuits (user_id, name, description, is_public) VALUES (?, ?, ?, 1)',
-  );
-  const insArtifact = db.prepare(
-    'INSERT INTO artifacts (pursuit_id, kind, title, content) VALUES (?, ?, ?, ?)',
-  );
-  const insEvent = db.prepare('INSERT INTO feed_events (user_id, kind, ref_id) VALUES (?, ?, ?)');
-
-  const run = db.transaction(() => {
+async function seed() {
+  await tx(async (q) => {
     for (const u of DEMO_USERS) {
-      insUser.run(u.id, u.name, '');
+      await q(`INSERT INTO users (id, name, image_url) VALUES ($1,$2,'') ON CONFLICT (id) DO NOTHING`, [u.id, u.name]);
       for (const p of u.pursuits) {
-        const pid = Number(insPursuit.run(u.id, p.name, p.description).lastInsertRowid);
-        insEvent.run(u.id, 'pursuit_public', pid);
+        const pr = await q(
+          `INSERT INTO pursuits (user_id, name, description, is_public) VALUES ($1,$2,$3,1) RETURNING id`,
+          [u.id, p.name, p.description],
+        );
+        const pid = (pr.rows[0] as { id: number }).id;
+        await q(`INSERT INTO feed_events (user_id, kind, ref_id) VALUES ($1,'pursuit_public',$2)`, [u.id, pid]);
         for (const a of p.artifacts) {
-          const aid = Number(insArtifact.run(pid, a.kind, a.title, a.content).lastInsertRowid);
-          insEvent.run(u.id, 'artifact', aid);
+          const ar = await q(
+            `INSERT INTO artifacts (pursuit_id, kind, title, content) VALUES ($1,$2,$3,$4) RETURNING id`,
+            [pid, a.kind, a.title, a.content],
+          );
+          const aid = (ar.rows[0] as { id: number }).id;
+          await q(`INSERT INTO feed_events (user_id, kind, ref_id) VALUES ($1,'artifact',$2)`, [u.id, aid]);
         }
       }
     }
   });
-  run();
   console.log(`Seeded ${DEMO_USERS.length} demo polymaths. Remove anytime: npm run seed:demo -- --clean`);
 }
 
-if (clean) cleanDemo();
-else seed();
+(clean ? cleanDemo() : seed())
+  .then(() => process.exit(0))
+  .catch((e) => {
+    console.error('Seed failed:', e instanceof Error ? e.message : e);
+    process.exit(1);
+  });

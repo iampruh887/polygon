@@ -112,7 +112,7 @@ function PolygonApp({ clerkEnabled }: Props) {
       );
       if (!sure) return;
       try {
-        const r = await api.importDb(file);
+        const r = await api.importJson(file);
         setTransferNote(
           `Imported ${r.pursuits} pursuit(s), ${r.artifacts} artifact(s), ${r.connections} connection(s).`,
         );
@@ -173,10 +173,10 @@ function PolygonApp({ clerkEnabled }: Props) {
           ))}
           <div className="menu-rule" />
           <a className="menu-item" href="/api/export" onClick={() => setMenuOpen(false)}>
-            ⬇ export .db
+            ⬇ export .json
           </a>
           <button className="menu-item" onClick={() => importInput.current?.click()}>
-            ⬆ import .db
+            ⬆ import .json
           </button>
           {state && (
             <>
@@ -193,7 +193,7 @@ function PolygonApp({ clerkEnabled }: Props) {
       <input
         ref={importInput}
         type="file"
-        accept=".db,application/octet-stream"
+        accept=".json,application/json"
         style={{ display: 'none' }}
         onChange={(e) => {
           void onImportPicked(e.target.files?.[0]);

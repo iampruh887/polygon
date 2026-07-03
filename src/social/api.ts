@@ -43,29 +43,31 @@ export function toggleHidden(userId: string): Set<string> {
   return set;
 }
 
-/** SSE with poll fallback: calls onTick when the feed may have changed. */
-export function useLiveTick(onTick: () => void): void {
+/**
+ * Keeps the feed fresh. Polling is the always-on floor (works on Vercel
+ * serverless, where SSE can't). When the server advertises sse_enabled (a
+ * long-running local/self-host server), SSE is layered on for near-instant
+ * updates. onTick fires whenever the feed may have changed.
+ */
+export function useLiveTick(onTick: () => void, sseEnabled: boolean): void {
   const cb = useRef(onTick);
   cb.current = onTick;
   useEffect(() => {
+    // Poll floor — always on.
+    const poll = setInterval(() => cb.current(), 10_000);
     let es: EventSource | null = null;
-    let poll: ReturnType<typeof setInterval> | null = null;
-    const startPolling = () => {
-      if (!poll) poll = setInterval(() => cb.current(), 10_000);
-    };
-    try {
-      es = new EventSource('/api/social/stream');
-      es.onmessage = () => cb.current();
-      es.onerror = () => {
-        // EventSource retries on its own; polling covers proxies that buffer SSE.
-        startPolling();
-      };
-    } catch {
-      startPolling();
+    if (sseEnabled) {
+      try {
+        es = new EventSource('/api/social/stream');
+        es.onmessage = () => cb.current();
+        // On error EventSource auto-reconnects; polling already covers the gap.
+      } catch {
+        /* polling floor covers it */
+      }
     }
     return () => {
       es?.close();
-      if (poll) clearInterval(poll);
+      clearInterval(poll);
     };
-  }, []);
+  }, [sseEnabled]);
 }

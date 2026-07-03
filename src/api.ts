@@ -20,11 +20,18 @@ export const api = {
     req(`/api/pursuits/${id}`, { method: 'PUT', body: JSON.stringify({ name, description, is_public }) }),
   deletePursuit: (id: number) => req(`/api/pursuits/${id}`, { method: 'DELETE' }),
   community: () => req<CommunityData>('/api/community'),
-  importDb: async (file: File) => {
+  importJson: async (file: File) => {
+    const text = await file.text();
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      throw new Error('That file is not valid JSON — pick a Polygon export');
+    }
     const res = await fetch('/api/import', {
       method: 'POST',
-      headers: { 'content-type': 'application/octet-stream' },
-      body: await file.arrayBuffer(),
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(parsed),
     });
     const body = (await res.json().catch(() => ({}))) as {
       ok?: boolean;
