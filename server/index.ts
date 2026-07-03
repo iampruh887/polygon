@@ -4,8 +4,8 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
-import { buildApp } from './app';
-import { llmConfigured } from './llm';
+import { buildApp } from './app.js';
+import { llmConfigured } from './llm.js';
 
 const app = await buildApp();
 

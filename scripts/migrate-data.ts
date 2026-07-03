@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
-import { tx } from '../server/pg';
+import { tx } from '../server/pg.js';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const sqlitePath = join(root, 'data', 'polygon.db');

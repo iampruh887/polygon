@@ -1,7 +1,7 @@
 // Create the Postgres schema in the database pointed to by DATABASE_URL.
 // Idempotent (CREATE TABLE IF NOT EXISTS). Run: npm run migrate:pg
-import { query } from '../server/pg';
-import { SCHEMA } from '../server/db';
+import { query } from '../server/pg.js';
+import { SCHEMA } from '../server/db.js';
 
 async function main() {
   if (!process.env.DATABASE_URL) {

@@ -1,7 +1,7 @@
 // Seed demo polymaths so the Atlas has a world in it before real friends
 // arrive. Run: npm run seed:demo — remove with: npm run seed:demo -- --clean
 // All demo rows use user ids prefixed 'demo_' and are safe to delete anytime.
-import { query, tx } from '../server/pg';
+import { query, tx } from '../server/pg.js';
 
 const clean = process.argv.includes('--clean');
 

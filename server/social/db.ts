@@ -1,8 +1,8 @@
 // Social module data layer, Postgres. Uses the shared pool from ../pg; core
 // never imports this file. Feed storage is append-only — deletion and privacy
 // are enforced by filter-on-read joins against live rows.
-import { query, tsCol, tx } from '../pg';
-import type { FeedEventInput } from '../events';
+import { query, tsCol, tx } from '../pg.js';
+import type { FeedEventInput } from '../events.js';
 
 // One normalization function, used everywhere pursuit names are compared.
 export function normalizePursuit(name: string): string {

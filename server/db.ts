@@ -1,4 +1,4 @@
-import { query, tx, tsCol, type Querier } from './pg';
+import { query, tx, tsCol, type Querier } from './pg.js';
 
 // Postgres schema. Integer identity ids (int4) so pg returns them as JS
 // numbers, not bigint strings. is_public stays smallint 0/1 to keep the

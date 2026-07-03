@@ -27,10 +27,10 @@ import {
   exportUserJson,
   importUserJson,
   type UserExport,
-} from './db';
-import { findConnections, llmConfigured, LlmNotConfiguredError, type ArtifactForScan } from './llm';
-import { emitFeedEvent } from './events';
-import { socialRouter } from './social';
+} from './db.js';
+import { findConnections, llmConfigured, LlmNotConfiguredError, type ArtifactForScan } from './llm.js';
+import { emitFeedEvent } from './events.js';
+import { socialRouter } from './social/index.js';
 
 const CLERK_ENABLED = Boolean(process.env.CLERK_SECRET_KEY);
 const ON_VERCEL = Boolean(process.env.VERCEL);

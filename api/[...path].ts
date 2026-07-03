@@ -2,7 +2,7 @@
 // The catch-all filename routes every /api/* request here; Express then does
 // its own routing. The app is built once per warm instance and reused.
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { buildApp } from '../server/app';
+import { buildApp } from '../server/app.js';
 
 let appPromise: ReturnType<typeof buildApp> | null = null;
 

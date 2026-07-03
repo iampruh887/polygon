@@ -2,7 +2,7 @@
 // middleware). Registers itself on the core's no-op feed emitter at import.
 // Core never imports this file — server/app.ts mounts it and nothing else.
 import { Router, type Request, type Response } from 'express';
-import { registerFeedListener, type FeedEventInput } from '../events';
+import { registerFeedListener, type FeedEventInput } from '../events.js';
 import {
   insertFeedEvent,
   feedPage,
@@ -13,7 +13,7 @@ import {
   unfollow,
   createReport,
   normalizePursuit,
-} from './db';
+} from './db.js';
 
 function uid(req: Request): string {
   return (req as Request & { userId: string }).userId;

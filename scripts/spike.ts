@@ -1,7 +1,7 @@
 // Spike: validate the core product bet — can the LLM find a genuinely specific
 // cross-domain connection, and (just as important) refuse to invent one where
 // none exists? Run with: npm run spike
-import { findConnections, llmConfigured, type ArtifactForScan } from '../server/llm';
+import { findConnections, llmConfigured, type ArtifactForScan } from '../server/llm.js';
 
 const artifacts: ArtifactForScan[] = [
   {
