@@ -73,6 +73,17 @@ export const SCHEMA = `
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
 
+  CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    email TEXT NOT NULL DEFAULT '',
+    display_name TEXT NOT NULL DEFAULT '',
+    category TEXT NOT NULL CHECK (category IN ('bug', 'idea', 'other')),
+    rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    message TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+
   CREATE INDEX IF NOT EXISTS idx_pursuits_user ON pursuits(user_id);
   CREATE INDEX IF NOT EXISTS idx_artifacts_pursuit ON artifacts(pursuit_id);
   CREATE INDEX IF NOT EXISTS idx_connections_a ON connections(artifact_a_id);
@@ -524,6 +535,26 @@ export async function importUserJson(
 
     return { pursuits: pMap.size, artifacts: aMap.size, connections: connCount };
   });
+}
+
+// ── Feedback ───────────────────────────────────────────
+
+export interface FeedbackInput {
+  user_id: string;
+  email: string;
+  display_name: string;
+  category: 'bug' | 'idea' | 'other';
+  rating: number;
+  message: string;
+}
+
+export async function createFeedback(f: FeedbackInput): Promise<number> {
+  const { rows } = await query<{ id: number }>(
+    `INSERT INTO feedback (user_id, email, display_name, category, rating, message)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+    [f.user_id, f.email, f.display_name, f.category, f.rating, f.message],
+  );
+  return rows[0].id;
 }
 
 export { query, tsCol, tx, type Querier };

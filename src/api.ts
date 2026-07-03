@@ -20,6 +20,8 @@ export const api = {
     req(`/api/pursuits/${id}`, { method: 'PUT', body: JSON.stringify({ name, description, is_public }) }),
   deletePursuit: (id: number) => req(`/api/pursuits/${id}`, { method: 'DELETE' }),
   community: () => req<CommunityData>('/api/community'),
+  submitFeedback: (category: 'bug' | 'idea' | 'other', rating: number, message: string) =>
+    req('/api/feedback', { method: 'POST', body: JSON.stringify({ category, rating, message }) }),
   importJson: async (file: File) => {
     const text = await file.text();
     let parsed: unknown;

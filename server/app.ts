@@ -26,9 +26,11 @@ import {
   publicConnections,
   exportUserJson,
   importUserJson,
+  createFeedback,
   query,
   type UserExport,
 } from './db.js';
+import { notifyTelegram, escapeHtml } from './telegram.js';
 import { findConnections, llmConfigured, LlmNotConfiguredError, type ArtifactForScan } from './llm.js';
 import { emitFeedEvent } from './events.js';
 import { socialRouter } from './social/index.js';
@@ -275,6 +277,53 @@ export async function buildApp(): Promise<Express> {
   app.get('/api/community', async (_req, res) => {
     const [members, feed] = await Promise.all([communityMembers(), publicConnections()]);
     res.json({ members, feed });
+  });
+
+  // ── Feedback ─────────────────────────────────────────
+  // Stores every submission and (if configured) pings Telegram. A Telegram
+  // failure never fails the user's submit; the row is committed first.
+  const FEEDBACK_CATEGORIES = new Set(['bug', 'idea', 'other']);
+
+  app.post('/api/feedback', async (req, res) => {
+    const userId = uid(req);
+    const { category, rating, message } = req.body ?? {};
+    if (!FEEDBACK_CATEGORIES.has(category)) {
+      return res.status(400).json({ error: 'category must be bug, idea, or other' });
+    }
+    const r = Number(rating);
+    if (!Number.isInteger(r) || r < 1 || r > 5) {
+      return res.status(400).json({ error: 'rating must be an integer 1–5' });
+    }
+    const text = typeof message === 'string' ? message.trim() : '';
+    if (!text) return res.status(400).json({ error: 'message is required' });
+    if (text.length > 4000) return res.status(400).json({ error: 'message is too long (max 4000 chars)' });
+
+    // Identity: users table has no email column — display name comes from it,
+    // the real email is fetched live from Clerk (best-effort).
+    const user = await getUser(userId);
+    const display_name = user?.name ?? (userId === 'local' ? 'You' : 'Polymath');
+    let email = '';
+    if (CLERK_ENABLED && userId !== 'local') {
+      try {
+        const { clerkClient } = await import('@clerk/express');
+        const u = await clerkClient.users.getUser(userId);
+        email = u.primaryEmailAddress?.emailAddress ?? '';
+      } catch {
+        /* email stays '' — never block feedback on a Clerk lookup */
+      }
+    }
+
+    await createFeedback({ user_id: userId, email, display_name, category, rating: r, message: text });
+
+    const stars = '★'.repeat(r) + '☆'.repeat(5 - r);
+    const who = email ? `${display_name} (${email})` : `${display_name} [${userId}]`;
+    await notifyTelegram(
+      `<b>Polygon feedback</b> — ${escapeHtml(category)} ${stars}\n` +
+        `${escapeHtml(text)}\n\n` +
+        `<i>${escapeHtml(who)}</i>`,
+    );
+
+    res.status(201).json({ ok: true });
   });
 
   // Social module (the Atlas). One mount line — removing it and the import
