@@ -230,7 +230,10 @@ export default function Pursuits({ state, refresh }: Props) {
                       ×
                     </button>
                   </div>
-                  <h3>{p.name}</h3>
+                  <h3>
+                    {p.name}
+                    {p.is_example && <span className="example-badge">example</span>}
+                  </h3>
                   {p.description && <p className="desc">{p.description}</p>}
                   <div className="meta">
                     {p.artifact_count} artifact{p.artifact_count === 1 ? '' : 's'}

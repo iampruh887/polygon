@@ -82,7 +82,10 @@ export default function ArtifactEditor({ state, refresh }: Props) {
               className={`rail-item ${a.id === selectedId ? 'active' : ''}`}
               onClick={() => loadArtifact(a.id)}
             >
-              <div className="rail-title">{a.title}</div>
+              <div className="rail-title">
+                {a.title}
+                {a.is_example && <span className="example-badge">example</span>}
+              </div>
               <div className="rail-meta">
                 {a.pursuit_name} · {a.kind} · {new Date(a.created_at + 'Z').toLocaleDateString()}
               </div>

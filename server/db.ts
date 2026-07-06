@@ -90,6 +90,22 @@ export const SCHEMA = `
   CREATE INDEX IF NOT EXISTS idx_connections_b ON connections(artifact_b_id);
   CREATE INDEX IF NOT EXISTS idx_feed_events_time ON feed_events(id DESC);
   CREATE INDEX IF NOT EXISTS idx_follows_followee ON follows(followee_id);
+
+  -- Onboarding (Approach A): seed a live example account on first login and
+  -- measure the activation funnel. Columns added idempotently so existing
+  -- deployments pick them up on the next migrate:pg run.
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS seeded_at TIMESTAMPTZ;
+  ALTER TABLE pursuits ADD COLUMN IF NOT EXISTS is_example BOOLEAN NOT NULL DEFAULT false;
+  ALTER TABLE artifacts ADD COLUMN IF NOT EXISTS is_example BOOLEAN NOT NULL DEFAULT false;
+  ALTER TABLE connections ADD COLUMN IF NOT EXISTS is_example BOOLEAN NOT NULL DEFAULT false;
+
+  CREATE TABLE IF NOT EXISTS onboarding_events (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    event TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX IF NOT EXISTS idx_onboarding_user ON onboarding_events(user_id);
 `;
 
 export interface User {
@@ -104,6 +120,7 @@ export interface Pursuit {
   name: string;
   description: string;
   is_public: number;
+  is_example: boolean;
   created_at: string;
   artifact_count: number;
   last_artifact_at: string | null;
@@ -115,6 +132,7 @@ export interface Artifact {
   kind: 'note' | 'code' | 'image' | 'puzzle';
   title: string;
   content: string;
+  is_example: boolean;
   created_at: string;
   pursuit_name?: string;
 }
@@ -124,6 +142,7 @@ export interface Connection {
   artifact_a_id: number;
   artifact_b_id: number;
   explanation_text: string;
+  is_example: boolean;
   created_at: string;
 }
 
@@ -164,7 +183,7 @@ export async function updateUserOpenAiApiKey(id: string, apiKey: string): Promis
 
 export async function listPursuits(userId: string): Promise<Pursuit[]> {
   const { rows } = await query<Pursuit>(
-    `SELECT p.id, p.user_id, p.name, p.description, p.is_public,
+    `SELECT p.id, p.user_id, p.name, p.description, p.is_public, p.is_example,
             ${tsCol('p.created_at', 'created_at')},
             COUNT(a.id)::int AS artifact_count,
             ${tsCol('MAX(a.created_at)', 'last_artifact_at')}
@@ -185,7 +204,7 @@ export async function createPursuit(
 ): Promise<Pursuit> {
   const { rows } = await query<Pursuit>(
     `INSERT INTO pursuits (user_id, name, description) VALUES ($1, $2, $3)
-     RETURNING id, user_id, name, description, is_public,
+     RETURNING id, user_id, name, description, is_public, is_example,
                ${tsCol('created_at', 'created_at')},
                0 AS artifact_count, NULL AS last_artifact_at`,
     [userId, name.trim(), description.trim()],
@@ -233,7 +252,7 @@ export async function artifactOwnedBy(userId: string, id: number): Promise<boole
 
 export async function listArtifacts(userId: string): Promise<Artifact[]> {
   const { rows } = await query<Artifact>(
-    `SELECT a.id, a.pursuit_id, a.kind, a.title, a.content,
+    `SELECT a.id, a.pursuit_id, a.kind, a.title, a.content, a.is_example,
             ${tsCol('a.created_at', 'created_at')}, p.name AS pursuit_name
      FROM artifacts a JOIN pursuits p ON p.id = a.pursuit_id
      WHERE p.user_id = $1
@@ -252,9 +271,9 @@ export async function createArtifact(
   const { rows } = await query<Artifact>(
     `WITH ins AS (
        INSERT INTO artifacts (pursuit_id, kind, title, content) VALUES ($1, $2, $3, $4)
-       RETURNING id, pursuit_id, kind, title, content, created_at
+       RETURNING id, pursuit_id, kind, title, content, is_example, created_at
      )
-     SELECT ins.id, ins.pursuit_id, ins.kind, ins.title, ins.content,
+     SELECT ins.id, ins.pursuit_id, ins.kind, ins.title, ins.content, ins.is_example,
             ${tsCol('ins.created_at', 'created_at')}, p.name AS pursuit_name
      FROM ins JOIN pursuits p ON p.id = ins.pursuit_id`,
     [pursuitId, kind, title.trim(), content],
@@ -290,7 +309,7 @@ export interface ConnectionRow extends Connection {
 
 export async function listConnections(userId: string): Promise<ConnectionRow[]> {
   const { rows } = await query<ConnectionRow>(
-    `SELECT c.id, c.artifact_a_id, c.artifact_b_id, c.explanation_text,
+    `SELECT c.id, c.artifact_a_id, c.artifact_b_id, c.explanation_text, c.is_example,
             ${tsCol('c.created_at', 'created_at')},
             aa.title AS a_title, ab.title AS b_title,
             pa.name AS a_pursuit, pb.name AS b_pursuit
@@ -330,6 +349,7 @@ export async function unscannedPairs(userId: string): Promise<[number, number][]
      JOIN artifacts a2 ON a1.id < a2.id
      JOIN pursuits p2 ON p2.id = a2.pursuit_id
      WHERE p1.user_id = $1 AND p2.user_id = $1
+       AND a1.is_example = false AND a2.is_example = false
        AND NOT EXISTS (
          SELECT 1 FROM scanned_pairs sp
          WHERE sp.artifact_a_id = a1.id AND sp.artifact_b_id = a2.id
@@ -394,7 +414,7 @@ export interface PublicConnection extends ConnectionRow {
 /** Connections whose BOTH endpoints sit in public pursuits — the Commons feed. */
 export async function publicConnections(limit = 50): Promise<PublicConnection[]> {
   const { rows } = await query<PublicConnection>(
-    `SELECT c.id, c.artifact_a_id, c.artifact_b_id, c.explanation_text,
+    `SELECT c.id, c.artifact_a_id, c.artifact_b_id, c.explanation_text, c.is_example,
             ${tsCol('c.created_at', 'created_at')},
             aa.title AS a_title, ab.title AS b_title,
             pa.name AS a_pursuit, pb.name AS b_pursuit,
@@ -535,6 +555,131 @@ export async function importUserJson(
 
     return { pursuits: pMap.size, artifacts: aMap.size, connections: connCount };
   });
+}
+
+// ── Onboarding: seeded example account + funnel events ──
+
+// The two example pursuits a brand-new account is seeded with. Kept private
+// (is_public 0) so they never leak into the Commons or the Atlas, and flagged
+// is_example so the UI can badge them and the "Clear examples" action can
+// remove them in one transactional delete. The single connection between the
+// chess "tempo" note and the cooking "resting" note is the wedge payoff — a
+// real, specific cross-domain "whoa" the user gets with zero effort.
+const EXAMPLE_SEED = {
+  chess: {
+    name: 'Chess',
+    description: 'openings, endgames, the quiet moves',
+    artifacts: [
+      {
+        kind: 'note' as const,
+        title: 'Zugzwang: when every legal move makes it worse',
+        content:
+          'A position where you would love to pass, but the rules force you to move — and every move damages you. The lesson bleeds outside chess: sometimes the obligation to act is itself the disadvantage.',
+      },
+      {
+        kind: 'note' as const,
+        title: 'Tempo — spend a move to gain the position',
+        content:
+          'Strong players will happily "waste" a move (a quiet king step, a slow rook lift) when it buys a better structure. Giving up initiative now to stand better later is not passivity — it is patience with a plan.',
+      },
+    ],
+  },
+  cooking: {
+    name: 'Cooking',
+    description: 'weeknight dinners, the occasional loaf',
+    artifacts: [
+      {
+        kind: 'note' as const,
+        title: 'Resting meat is doing nothing, on purpose',
+        content:
+          'Pull the steak off the heat and just wait. Carryover heat keeps cooking it and the juices redistribute instead of spilling out. The minutes of apparent inactivity are when the dish actually finishes.',
+      },
+      {
+        kind: 'note' as const,
+        title: 'Salt in layers, not at the end',
+        content:
+          'Season at each stage rather than dumping salt on the finished plate. Flavor built gradually tastes deeper than the same amount added last-minute.',
+      },
+    ],
+  },
+  connection:
+    'Both are the discipline of deliberate waiting. In chess you spend a tempo — giving up the initiative now — to reach a stronger position later; resting meat spends minutes doing nothing so heat and juices settle into something better. The move you choose not to make and the heat you choose not to add are, in both crafts, the technique.',
+};
+
+/**
+ * Atomically claim the one-time seed for this user. Returns true exactly once
+ * per user: the UPDATE only matches while seeded_at IS NULL, so concurrent
+ * /api/onboard calls (parallel SPA mounts, multiple serverless instances) can
+ * never double-seed. Caller seeds only when this returns true.
+ */
+export async function claimSeed(userId: string): Promise<boolean> {
+  const { rowCount } = await query(
+    'UPDATE users SET seeded_at = now() WHERE id = $1 AND seeded_at IS NULL',
+    [userId],
+  );
+  return rowCount > 0;
+}
+
+/** Insert the two example pursuits, four artifacts, and one connection. */
+export async function seedExampleAccount(userId: string): Promise<void> {
+  await tx(async (q) => {
+    const ids: Record<string, number> = {};
+    for (const p of [EXAMPLE_SEED.chess, EXAMPLE_SEED.cooking]) {
+      const pr = await q(
+        `INSERT INTO pursuits (user_id, name, description, is_public, is_example)
+         VALUES ($1, $2, $3, 0, true)
+         ON CONFLICT (user_id, name) DO NOTHING
+         RETURNING id`,
+        [userId, p.name, p.description],
+      );
+      // If the user already has a same-named pursuit, skip that example cleanly.
+      if (pr.rows.length === 0) continue;
+      const pid = (pr.rows[0] as { id: number }).id;
+      for (const a of p.artifacts) {
+        const ar = await q(
+          `INSERT INTO artifacts (pursuit_id, kind, title, content, is_example)
+           VALUES ($1, $2, $3, $4, true) RETURNING id`,
+          [pid, a.kind, a.title, a.content],
+        );
+        ids[a.title] = (ar.rows[0] as { id: number }).id;
+      }
+    }
+    const aId = ids['Tempo — spend a move to gain the position'];
+    const bId = ids['Resting meat is doing nothing, on purpose'];
+    if (aId && bId) {
+      await q(
+        `INSERT INTO connections (artifact_a_id, artifact_b_id, explanation_text, is_example)
+         VALUES ($1, $2, $3, true)`,
+        [aId, bId, EXAMPLE_SEED.connection],
+      );
+    }
+  });
+}
+
+/** Remove every example row for this user in one transaction (pursuits cascade
+ *  to their artifacts and connections). Leaves zero orphaned rows. */
+export async function clearExamples(userId: string): Promise<void> {
+  await query('DELETE FROM pursuits WHERE user_id = $1 AND is_example = true', [userId]);
+}
+
+const ONBOARDING_EVENTS = new Set([
+  'first_real_artifact',
+  'first_scan',
+  'reached_map',
+  'reached_atlas',
+  'cleared_examples',
+]);
+
+/** Record the first occurrence of a funnel milestone for this user (idempotent
+ *  per user+event, so the events table is a clean one-row-per-milestone funnel). */
+export async function logOnboardingEvent(userId: string, event: string): Promise<void> {
+  if (!ONBOARDING_EVENTS.has(event)) return;
+  await query(
+    `INSERT INTO onboarding_events (user_id, event)
+     SELECT $1, $2
+     WHERE NOT EXISTS (SELECT 1 FROM onboarding_events WHERE user_id = $1 AND event = $2)`,
+    [userId, event],
+  );
 }
 
 // ── Feedback ───────────────────────────────────────────

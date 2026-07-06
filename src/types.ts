@@ -10,6 +10,7 @@ export interface Pursuit {
   name: string;
   description: string;
   is_public: number;
+  is_example: boolean;
   created_at: string;
   artifact_count: number;
   last_artifact_at: string | null;
@@ -23,6 +24,7 @@ export interface Artifact {
   kind: ArtifactKind;
   title: string;
   content: string;
+  is_example: boolean;
   created_at: string;
   pursuit_name: string;
 }
@@ -32,6 +34,7 @@ export interface Connection {
   artifact_a_id: number;
   artifact_b_id: number;
   explanation_text: string;
+  is_example: boolean;
   created_at: string;
   a_title: string;
   b_title: string;

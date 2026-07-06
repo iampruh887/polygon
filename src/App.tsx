@@ -8,10 +8,11 @@ import ArtifactEditor from './components/ArtifactEditor';
 import Connections from './components/Connections';
 import Commons from './components/Commons';
 import GraphView from './components/GraphView';
-import WelcomeGuide from './components/WelcomeGuide';
+import FirstRunCoach from './components/FirstRunCoach';
 import OpenAiKeySettings from './components/OpenAiKeySettings';
 import FeedbackButton from './components/FeedbackButton';
 import ToastHost from './components/ToastHost';
+import { toast } from './toast';
 
 // The social module ships as its own chunk — the core app never loads Atlas
 // code unless the Discover vertex is visited.
@@ -57,12 +58,30 @@ function PolygonApp({ clerkEnabled }: Props) {
     }
   }, []);
 
+  // Bootstrap: seed the example account once (server-side idempotent), then
+  // load state so a brand-new user's hexagon is alive on first paint.
   useEffect(() => {
-    void refresh();
+    let cancelled = false;
+    (async () => {
+      try {
+        await api.onboard();
+      } catch {
+        /* onboard is best-effort — never block the app if seeding fails */
+      }
+      if (!cancelled) await refresh();
+    })();
     return () => {
+      cancelled = true;
       if (collapseTimer.current) clearTimeout(collapseTimer.current);
     };
   }, [refresh]);
+
+  // Funnel milestones the client can see: reaching the Map or the Atlas.
+  // Server-driven milestones (first artifact, first scan) are logged server-side.
+  useEffect(() => {
+    if (view === 'map') void api.logEvent('reached_map');
+    else if (view === 'discover') void api.logEvent('reached_atlas');
+  }, [view]);
 
   const goHome = useCallback(() => {
     if (collapseTimer.current) return; // collapse already in flight
@@ -127,6 +146,22 @@ function PolygonApp({ clerkEnabled }: Props) {
     [refresh],
   );
 
+  const hasExamples = Boolean(
+    state && (state.pursuits.some((p) => p.is_example) || state.artifacts.some((a) => a.is_example)),
+  );
+
+  const clearExamples = useCallback(async () => {
+    if (!confirm('Remove the example pursuits and their artifacts? Your own data is untouched.')) return;
+    try {
+      await api.clearExamples();
+      toast('Examples cleared');
+      await refresh();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Could not clear examples', 'error');
+    }
+    setMenuOpen(false);
+  }, [refresh]);
+
   const PAGE_TITLES: Record<View, string> = {
     home: '',
     pursuits: 'Pursuits',
@@ -180,6 +215,11 @@ function PolygonApp({ clerkEnabled }: Props) {
           <button className="menu-item" onClick={() => importInput.current?.click()}>
             ⬆ import .json
           </button>
+          {hasExamples && (
+            <button className="menu-item" onClick={() => void clearExamples()}>
+              ⌫ clear examples
+            </button>
+          )}
           {state && (
             <>
               <div className="menu-rule" />
@@ -234,7 +274,7 @@ function PolygonApp({ clerkEnabled }: Props) {
           )}
         </div>
       )}
-      {state && <WelcomeGuide state={state} view={view} navigate={navigate} />}
+      {state && <FirstRunCoach state={state} navigate={navigate} />}
       {state && <FeedbackButton />}
       <ToastHost />
     </div>

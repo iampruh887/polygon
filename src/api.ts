@@ -14,6 +14,10 @@ async function req<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   state: () => req<AppState>('/api/state'),
+  onboard: () => req<{ seeded: boolean }>('/api/onboard', { method: 'POST' }),
+  clearExamples: () => req('/api/onboard/clear', { method: 'POST' }),
+  logEvent: (event: string) =>
+    req('/api/events', { method: 'POST', body: JSON.stringify({ event }) }).catch(() => {}),
   createPursuit: (name: string, description: string) =>
     req('/api/pursuits', { method: 'POST', body: JSON.stringify({ name, description }) }),
   updatePursuit: (id: number, name: string, description: string, is_public: boolean) =>

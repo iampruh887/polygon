@@ -27,6 +27,10 @@ import {
   exportUserJson,
   importUserJson,
   createFeedback,
+  claimSeed,
+  seedExampleAccount,
+  clearExamples,
+  logOnboardingEvent,
   query,
   type UserExport,
 } from './db.js';
@@ -132,6 +136,42 @@ export async function buildApp(): Promise<Express> {
     });
   });
 
+  // ── Onboarding (Approach A) ──────────────────────────
+  // One-shot seed of a live example account. Idempotent: claimSeed only
+  // succeeds once per user (atomic), so parallel calls never double-seed.
+  app.post('/api/onboard', async (req, res) => {
+    const userId = uid(req);
+    const claimed = await claimSeed(userId);
+    if (claimed) {
+      try {
+        await seedExampleAccount(userId);
+      } catch (e) {
+        // Never leave a user permanently "seeded but empty" if the insert
+        // fails — release the claim so a later call can retry.
+        await query('UPDATE users SET seeded_at = NULL WHERE id = $1', [userId]);
+        throw e;
+      }
+    }
+    res.json({ seeded: claimed });
+  });
+
+  app.post('/api/onboard/clear', async (req, res) => {
+    const userId = uid(req);
+    await clearExamples(userId);
+    await logOnboardingEvent(userId, 'cleared_examples');
+    res.json({ ok: true });
+  });
+
+  // Client-reported funnel milestones (reached_map / reached_atlas). Milestones
+  // driven by a server action (first_real_artifact, first_scan) are logged in
+  // their own routes; unknown event names are ignored by logOnboardingEvent.
+  app.post('/api/events', async (req, res) => {
+    const { event } = req.body ?? {};
+    if (typeof event !== 'string') return res.status(400).json({ error: 'event is required' });
+    await logOnboardingEvent(uid(req), event);
+    res.json({ ok: true });
+  });
+
   // Per-user OpenAI key (bring-your-own): stored server-side, never echoed back.
   app.put('/api/settings/openai-key', async (req, res) => {
     const { api_key } = req.body ?? {};
@@ -203,6 +243,9 @@ export async function buildApp(): Promise<Express> {
     if (!(await pursuitOwnedBy(uid(req), pursuit_id))) return res.status(404).json({ error: 'Not your pursuit' });
     const artifact = await createArtifact(pursuit_id, kind, title, String(content));
     await emitFeedEvent({ user_id: uid(req), kind: 'artifact', ref_id: artifact.id });
+    // Real artifacts only reach this route (seeded examples are inserted
+    // directly), so this is the true activation milestone.
+    await logOnboardingEvent(uid(req), 'first_real_artifact');
     res.status(201).json(artifact);
   });
 
@@ -227,6 +270,7 @@ export async function buildApp(): Promise<Express> {
   // and the fact that each pair was evaluated (so no pair repeats).
   app.post('/api/scan', async (req, res) => {
     const userId = uid(req);
+    await logOnboardingEvent(userId, 'first_scan');
     const allPairs = await unscannedPairs(userId);
     if (allPairs.length === 0) {
       return res.json({ status: 'empty', connections: [], pairs_scanned: 0, pairs_remaining: 0 });
