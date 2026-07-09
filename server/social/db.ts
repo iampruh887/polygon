@@ -24,7 +24,7 @@ export interface FeedItem {
   kind: string;
   created_at: string;
   user: { id: string; name: string; image_url: string };
-  artifact?: { id: number; title: string; kind: string; snippet: string; pursuit_name: string };
+  artifact?: { id: number; title: string; kind: string; snippet: string; has_image: boolean; pursuit_name: string };
   connection?: {
     id: number;
     a_title: string;
@@ -67,7 +67,14 @@ export async function feedPage(beforeId: number | null, limit = 30): Promise<Fee
     };
     if (r.kind === 'artifact') {
       const { rows: a } = await query<FeedItem['artifact']>(
-        `SELECT a.id, a.title, a.kind, substr(a.content, 1, 280) AS snippet, p.name AS pursuit_name
+        // Images live in `content` as a data URL — never dump that as a text
+        // snippet. Flag it instead so the client renders a thumbnail (served
+        // lazily by /artifact/:id/image) rather than a wall of base64.
+        `SELECT a.id, a.title, a.kind,
+                CASE WHEN a.kind = 'image' AND a.content LIKE 'data:image/%'
+                     THEN '' ELSE substr(a.content, 1, 280) END AS snippet,
+                (a.kind = 'image' AND a.content LIKE 'data:image/%') AS has_image,
+                p.name AS pursuit_name
          FROM artifacts a JOIN pursuits p ON p.id = a.pursuit_id
          WHERE a.id = $1 AND p.is_public = 1`,
         [r.ref_id],
@@ -99,6 +106,32 @@ export async function feedPage(beforeId: number | null, limit = 30): Promise<Fee
     items.push(base);
   }
   return items;
+}
+
+export interface PublicArtifact {
+  id: number;
+  title: string;
+  kind: string;
+  content: string;
+  created_at: string;
+  pursuit_name: string;
+  owner_id: string;
+  owner_name: string;
+}
+
+// Full public artifact, for the "expand and view" panel. Visible only while its
+// pursuit is public — the same filter-on-read rule the feed uses.
+export async function publicArtifact(id: number): Promise<PublicArtifact | null> {
+  const { rows } = await query<PublicArtifact>(
+    `SELECT a.id, a.title, a.kind, a.content, ${tsCol('a.created_at', 'created_at')},
+            p.name AS pursuit_name, u.id AS owner_id, u.name AS owner_name
+     FROM artifacts a
+     JOIN pursuits p ON p.id = a.pursuit_id AND p.is_public = 1
+     JOIN users u ON u.id = p.user_id
+     WHERE a.id = $1`,
+    [id],
+  );
+  return rows[0] ?? null;
 }
 
 // ── Atlas ──────────────────────────────────────────────
@@ -187,7 +220,9 @@ export async function pursuitDetail(norm: string, viewerId: string) {
     withScores.push({ ...m, overlap, is_following: f.length > 0 });
   }
   const { rows: artifacts } = await query(
-    `SELECT a.id, a.title, a.kind, substr(a.content, 1, 200) AS snippet,
+    `SELECT a.id, a.title, a.kind,
+            CASE WHEN a.kind = 'image' AND a.content LIKE 'data:image/%'
+                 THEN '' ELSE substr(a.content, 1, 200) END AS snippet,
             ${tsCol('a.created_at', 'created_at')}, u.name AS owner_name, u.id AS owner_id
      FROM artifacts a
      JOIN pursuits p ON p.id = a.pursuit_id AND p.is_public = 1
@@ -214,7 +249,9 @@ export async function profileDetail(targetId: string, viewerId: string) {
     [targetId],
   );
   const { rows: artifacts } = await query(
-    `SELECT a.id, a.title, a.kind, substr(a.content, 1, 200) AS snippet,
+    `SELECT a.id, a.title, a.kind,
+            CASE WHEN a.kind = 'image' AND a.content LIKE 'data:image/%'
+                 THEN '' ELSE substr(a.content, 1, 200) END AS snippet,
             ${tsCol('a.created_at', 'created_at')}, p.name AS pursuit_name
      FROM artifacts a JOIN pursuits p ON p.id = a.pursuit_id
      WHERE p.user_id = $1 AND p.is_public = 1

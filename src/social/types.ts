@@ -11,7 +11,7 @@ export interface FeedItem {
   kind: 'artifact' | 'connection' | 'pursuit_public';
   created_at: string;
   user: { id: string; name: string; image_url: string };
-  artifact?: { id: number; title: string; kind: string; snippet: string; pursuit_name: string };
+  artifact?: { id: number; title: string; kind: string; snippet: string; has_image?: boolean; pursuit_name: string };
   connection?: {
     id: number;
     a_title: string;
@@ -21,6 +21,18 @@ export interface FeedItem {
     explanation_text: string;
   };
   pursuit?: { id: number; name: string; description: string };
+}
+
+export interface ArtifactDetail {
+  id: number;
+  title: string;
+  kind: string;
+  content: string;
+  has_image: boolean;
+  created_at: string;
+  pursuit_name: string;
+  owner_id: string;
+  owner_name: string;
 }
 
 export interface PursuitMember {

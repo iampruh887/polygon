@@ -6,6 +6,7 @@ import { registerFeedListener, type FeedEventInput } from '../events.js';
 import {
   insertFeedEvent,
   feedPage,
+  publicArtifact,
   atlasNodes,
   pursuitDetail,
   profileDetail,
@@ -72,6 +73,32 @@ socialRouter.get('/stream', (req, res) => {
   req.on('close', () => {
     sseClients.delete(res);
   });
+});
+
+// Full artifact for the expand view. Content is returned for text kinds; for
+// images it's dropped (the client loads the picture from /image below) so this
+// JSON stays small even when the image is multiple megabytes of base64.
+socialRouter.get('/artifact/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Bad artifact id' });
+  const a = await publicArtifact(id);
+  if (!a) return res.status(404).json({ error: 'No such public artifact' });
+  const hasImage = a.kind === 'image' && /^data:image\//.test(a.content);
+  res.json({ ...a, content: hasImage ? '' : a.content, has_image: hasImage });
+});
+
+// The image bytes for an image artifact, decoded from its data URL. Kept as a
+// separate binary endpoint so <img> tags can lazy-load and the browser can
+// cache them, instead of inlining base64 into every feed payload.
+socialRouter.get('/artifact/:id/image', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).end();
+  const a = await publicArtifact(id);
+  const m = a && a.kind === 'image' ? /^data:([\w/+.-]+);base64,(.*)$/s.exec(a.content) : null;
+  if (!m) return res.status(404).end();
+  res.setHeader('content-type', m[1]);
+  res.setHeader('cache-control', 'public, max-age=3600');
+  res.send(Buffer.from(m[2], 'base64'));
 });
 
 socialRouter.get('/atlas', async (_req, res) => {

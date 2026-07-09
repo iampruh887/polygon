@@ -4,13 +4,17 @@ import type { AtlasNode, FeedItem } from './types';
 import { socialApi, hiddenUsers, useLiveTick } from './api';
 import AtlasGraph from './AtlasGraph';
 import FeedRail from './FeedRail';
-import { PursuitPanel, ProfilePanel } from './Panels';
+import { PursuitPanel, ProfilePanel, ArtifactPanel } from './Panels';
 
 interface Props {
   state: AppState;
 }
 
-type Panel = { type: 'none' } | { type: 'pursuit'; norm: string; name: string } | { type: 'profile'; userId: string };
+type Panel =
+  | { type: 'none' }
+  | { type: 'pursuit'; norm: string; name: string }
+  | { type: 'profile'; userId: string }
+  | { type: 'artifact'; artifactId: number };
 
 // The Atlas: one shared knowledge map. Everyone's public pursuits merged into
 // a collective graph; the feed rail runs alongside; profiles and follows live
@@ -41,6 +45,7 @@ export default function Discover({ state }: Props) {
   useLiveTick(reload, state.sse_enabled);
 
   const openProfile = useCallback((userId: string) => setPanel({ type: 'profile', userId }), []);
+  const openArtifact = useCallback((artifactId: number) => setPanel({ type: 'artifact', artifactId }), []);
 
   const onReport = useCallback((kind: string, id: string | number) => {
     const reason = prompt('What’s wrong with this content?') ?? '';
@@ -99,9 +104,23 @@ export default function Discover({ state }: Props) {
             onHiddenChange={setHidden}
           />
         )}
+        {panel.type === 'artifact' && (
+          <ArtifactPanel
+            artifactId={panel.artifactId}
+            onOpenProfile={openProfile}
+            onReport={onReport}
+            onClose={() => setPanel({ type: 'none' })}
+          />
+        )}
       </div>
 
-      <FeedRail items={feed} hidden={hidden} onOpenProfile={openProfile} onReport={onReport} />
+      <FeedRail
+        items={feed}
+        hidden={hidden}
+        onOpenProfile={openProfile}
+        onOpenArtifact={openArtifact}
+        onReport={onReport}
+      />
     </div>
   );
 }

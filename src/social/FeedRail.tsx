@@ -4,6 +4,7 @@ interface Props {
   items: FeedItem[];
   hidden: Set<string>;
   onOpenProfile: (userId: string) => void;
+  onOpenArtifact: (id: number) => void;
   onReport: (kind: string, id: string | number) => void;
 }
 
@@ -11,7 +12,7 @@ function when(iso: string): string {
   return new Date(iso + 'Z').toLocaleString();
 }
 
-export default function FeedRail({ items, hidden, onOpenProfile, onReport }: Props) {
+export default function FeedRail({ items, hidden, onOpenProfile, onOpenArtifact, onReport }: Props) {
   const visible = items.filter((i) => !hidden.has(i.user.id));
   return (
     <aside className="feed-rail">
@@ -34,14 +35,27 @@ export default function FeedRail({ items, hidden, onOpenProfile, onReport }: Pro
           </button>
 
           {item.kind === 'artifact' && item.artifact && (
-            <>
+            <button
+              className="feed-artifact-open"
+              onClick={() => onOpenArtifact(item.artifact!.id)}
+              title="Open this artifact"
+            >
               <div className="feed-verb">
                 logged <span className="kind-inline">{item.artifact.kind}</span> in{' '}
                 <em>{item.artifact.pursuit_name}</em>
               </div>
               <div className="feed-title">{item.artifact.title}</div>
-              {item.artifact.snippet && <p className="feed-snippet">{item.artifact.snippet}</p>}
-            </>
+              {item.artifact.has_image ? (
+                <img
+                  className="feed-image-thumb"
+                  src={`/api/social/artifact/${item.artifact.id}/image`}
+                  alt={item.artifact.title}
+                  loading="lazy"
+                />
+              ) : (
+                item.artifact.snippet && <p className="feed-snippet">{item.artifact.snippet}</p>
+              )}
+            </button>
           )}
           {item.kind === 'connection' && item.connection && (
             <>

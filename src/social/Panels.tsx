@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { socialApi, toggleHidden } from './api';
-import type { PursuitDetail, ProfileDetail } from './types';
+import type { PursuitDetail, ProfileDetail, ArtifactDetail } from './types';
 
 // Side panels for the Atlas: pursuit detail (the people inside a node) and
 // member profile (their public polygon + artifacts + follow).
@@ -64,6 +64,65 @@ export function PursuitPanel({ norm, displayName, onOpenProfile, onClose, selfId
               {a.snippet && <p className="feed-snippet">{a.snippet}</p>}
             </div>
           ))}
+        </>
+      )}
+    </div>
+  );
+}
+
+interface ArtifactPanelProps {
+  artifactId: number;
+  onOpenProfile: (userId: string) => void;
+  onClose: () => void;
+  onReport: (kind: string, id: string | number) => void;
+}
+
+// The expand-and-view panel: the full public artifact — the whole image for
+// image kinds, the full text (not the 280-char feed snippet) for the rest.
+export function ArtifactPanel({ artifactId, onOpenProfile, onClose, onReport }: ArtifactPanelProps) {
+  const [detail, setDetail] = useState<ArtifactDetail | null>(null);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    setDetail(null);
+    setMissing(false);
+    socialApi.artifact(artifactId).then(setDetail).catch(() => setMissing(true));
+  }, [artifactId]);
+
+  return (
+    <div className="atlas-panel">
+      <div className="atlas-panel-head">
+        <h3>{detail?.title ?? (missing ? 'Gone' : 'Opening…')}</h3>
+        <button className="btn ghost" onClick={onClose}>×</button>
+      </div>
+      {missing ? (
+        <p className="empty">This artifact is no longer public.</p>
+      ) : !detail ? (
+        <p className="empty">Opening…</p>
+      ) : (
+        <>
+          <button className="panel-member-meta artifact-owner" onClick={() => onOpenProfile(detail.owner_id)}>
+            {detail.owner_name} · {detail.pursuit_name} · {detail.kind} ·{' '}
+            {new Date(detail.created_at + 'Z').toLocaleDateString()}
+          </button>
+          {detail.has_image ? (
+            <img
+              className="artifact-full-image"
+              src={`/api/social/artifact/${detail.id}/image`}
+              alt={detail.title}
+            />
+          ) : detail.content.trim() ? (
+            <pre className={`artifact-full-content ${detail.kind === 'code' ? 'code' : ''}`}>
+              {detail.content}
+            </pre>
+          ) : (
+            <p className="empty">Nothing in this artifact yet.</p>
+          )}
+          <div className="profile-actions">
+            <button className="btn ghost" onClick={() => onReport('artifact', detail.id)}>
+              report
+            </button>
+          </div>
         </>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { AtlasNode, FeedItem, PursuitDetail, ProfileDetail } from './types';
+import type { AtlasNode, FeedItem, PursuitDetail, ProfileDetail, ArtifactDetail } from './types';
 
 async function req<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, { headers: { 'content-type': 'application/json' }, ...init });
@@ -12,6 +12,7 @@ export const socialApi = {
   atlas: () => req<{ nodes: AtlasNode[]; total: number }>('/api/social/atlas'),
   feed: (before?: number) =>
     req<{ items: FeedItem[] }>(`/api/social/feed${before ? `?before=${before}` : ''}`),
+  artifact: (id: number) => req<ArtifactDetail>(`/api/social/artifact/${id}`),
   pursuit: (norm: string) => req<PursuitDetail>(`/api/social/pursuit/${encodeURIComponent(norm)}`),
   profile: (userId: string) => req<ProfileDetail>(`/api/social/profile/${encodeURIComponent(userId)}`),
   follow: (userId: string) => req(`/api/social/follows/${encodeURIComponent(userId)}`, { method: 'POST' }),

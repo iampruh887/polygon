@@ -1585,6 +1585,85 @@ h2 .count {
   opacity: 1;
 }
 
+/* Whole artifact body is a click target that opens the expand-and-view panel */
+.feed-artifact-open {
+  appearance: none;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+  padding: 4px;
+  margin: 0 -4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.feed-artifact-open:hover {
+  background: var(--paper-sunken);
+}
+
+.feed-image-thumb {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper-sunken);
+}
+
+/* ── Expand-and-view artifact panel ─────────────────── */
+
+.artifact-owner {
+  appearance: none;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.artifact-owner:hover {
+  color: var(--red);
+}
+
+.artifact-full-image {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-sunken);
+}
+
+.artifact-full-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink);
+  margin: 0;
+  max-height: 62vh;
+  overflow: auto;
+}
+
+.artifact-full-content.code {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--code-bg);
+  padding: 12px;
+  border-radius: 6px;
+}
+
 /* ── Empty states ───────────────────────────────────── */
 
 .empty {
