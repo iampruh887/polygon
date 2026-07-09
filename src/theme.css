@@ -1231,6 +1231,84 @@ h2 .count {
   font-style: italic;
 }
 
+/* Image artifacts: upload + preview replace the textarea for kind === 'image' */
+.editor-body.image-drop {
+  display: flex;
+  align-items: stretch;
+}
+
+.image-dropzone {
+  flex: 1;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  border: 2px dashed var(--line-strong);
+  border-radius: 10px;
+  background: var(--paper-sunken);
+  text-align: center;
+  padding: 24px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.image-dropzone:hover {
+  border-color: var(--ink-faint);
+  background: var(--paper-raised);
+}
+
+.image-dropzone-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.image-dropzone-hint {
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.image-dropzone-legacy {
+  margin-top: 10px;
+  max-width: 460px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-faint);
+  white-space: pre-wrap;
+}
+
+.image-preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  align-self: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-sunken);
+}
+
+.image-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* The "Replace image" control is a <label> — make it read as a button */
+.image-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
 /* ── Discover: the Atlas ────────────────────────────── */
 
 .discover-layout {
