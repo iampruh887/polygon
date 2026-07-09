@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api';
 import { toast } from '../toast';
+import { renderMarkdown } from '../markdown';
 import type { AppState, ArtifactKind } from '../types';
 
 interface Props {
@@ -85,6 +86,7 @@ export default function ArtifactEditor({ state, refresh }: Props) {
   const [content, setContent] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [preview, setPreview] = useState(false);
 
   function loadArtifact(id: number) {
     const a = state.artifacts.find((x) => x.id === id);
@@ -96,6 +98,7 @@ export default function ArtifactEditor({ state, refresh }: Props) {
     setContent(a.content);
     setStatus(null);
     setDirty(false);
+    setPreview(false);
   }
 
   function startNew() {
@@ -104,6 +107,7 @@ export default function ArtifactEditor({ state, refresh }: Props) {
     setContent('');
     setStatus(null);
     setDirty(false);
+    setPreview(false);
     // keep pursuit + kind — logging several artifacts in a row usually stays
     // within the same pursuit, and re-picking every time is friction.
   }
@@ -229,7 +233,9 @@ export default function ArtifactEditor({ state, refresh }: Props) {
           <select
             value={kind}
             onChange={(e) => {
-              setKind(e.target.value as ArtifactKind);
+              const next = e.target.value as ArtifactKind;
+              setKind(next);
+              if (next === 'image') setPreview(false); // images have their own view
               setDirty(true);
             }}
           >
@@ -239,6 +245,15 @@ export default function ArtifactEditor({ state, refresh }: Props) {
               </option>
             ))}
           </select>
+          {kind !== 'image' && (
+            <button
+              className={`btn ${preview ? 'primary' : ''}`}
+              onClick={() => setPreview((p) => !p)}
+              title={preview ? 'Back to editing' : 'Render the Markdown'}
+            >
+              {preview ? 'Edit' : 'Preview'}
+            </button>
+          )}
           {selected && <span className="editor-when">logged {new Date(selected.created_at + 'Z').toLocaleString()}</span>}
           <span className="editor-status">{dirty ? 'unsaved' : status}</span>
           <button className="btn primary" onClick={() => void save()} disabled={pursuitId === '' || !title.trim()}>
@@ -294,6 +309,15 @@ export default function ArtifactEditor({ state, refresh }: Props) {
               </label>
             )}
           </div>
+        ) : preview ? (
+          content.trim() ? (
+            <div
+              className="editor-body markdown-preview"
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+            />
+          ) : (
+            <div className="editor-body markdown-preview empty-preview">Nothing to preview yet.</div>
+          )
         ) : (
           <textarea
             className={`editor-body ${kind === 'code' ? 'code' : ''}`}
